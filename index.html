@@ -16,6 +16,7 @@
             border: 1px solid #e5e7eb;
             position: relative; /* 뱃지 위치를 위해 추가 */
             padding: 2.5rem 1rem 1.5rem 1rem; /* 뱃지 공간 확보 (상단 2.5rem) */
+            border-radius: 0.75rem; /* rounded-xl */
         }
         .question-card:hover { 
             transform: translateY(-5px); 
@@ -40,6 +41,7 @@
             border-top: 2px dashed #fcd34d; /* yellow-400 */
             margin-top: 1rem; 
             padding: 1rem; 
+            border-radius: 0.5rem;
         }
         .result-tag { background-color: #f0f0f0; color: #374151; }
         .brain-type-header { font-size: 1.125rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; }
@@ -92,30 +94,28 @@
             <p class="mt-2 text-gray-600">질문에 답하고 두 분의 고유한 '결'과 매칭률을 확인해보세요.</p>
         </header>
 
-        <!-- 점수 계산 방식 안내 -->
-        <div class="mb-4 max-w-4xl mx-auto bg-indigo-50 p-4 rounded-lg text-sm text-gray-700 border border-indigo-200">
+        <!-- 점수 계산 방식 (100점 만점) -->
+        <div class="mb-8 max-w-4xl mx-auto bg-indigo-50 p-4 rounded-lg text-sm text-gray-700 border border-indigo-200">
             <details>
-                <summary class="font-semibold text-center text-indigo-800 mb-2 cursor-pointer">💡 점수 계산 방식 안내 (클릭하여 확인)</summary>
+                <summary class="font-semibold text-center text-indigo-800 mb-2 cursor-pointer">💡 점수 계산 방식 안내 (100점 만점)</summary>
                 <div class="mt-2 space-y-3">
                     <div>
-                        <p class="font-semibold">💖 최종 매칭 점수 (100점 만점 환산):</p>
-                        <p>- '유사성 점수' + '선호성 점수' + '결 모양 점수'를 합산하여 100점 만점으로 환산합니다.</p>
+                        <p class="font-semibold">💖 최종 매칭 점수 (총 100점 만점):</p>
+                        <p>- '결' 모양 점수(기본) + '유사성 점수'(보너스) + '선호성 점수'(보너스)를 합산합니다.</p>
                     </div>
                     <div>
-                        <p class="font-semibold">🤝 유사성 점수 (총 72점 만점):</p>
-                        <p>- '유사성' 질문에서 두 분의 답변이 <strong>완전히 일치</strong>하면 <strong>6점</strong>을 얻습니다.<br>
-                           - 답변이 다르더라도 비슷한 <strong>'성향 그룹(결)'</strong>에 속하면 <strong>5점</strong>을 얻습니다.</p>
+                        <p class="font-semibold">✨ '결' 모양 점수 (총점 중 70점):</p>
+                        <p>- 두 분의 '결' 성향 분포(방사형 그래프)가 얼마나 비슷한지(0~100%) 계산하여, <strong>최대 70점</strong>의 기본 점수를 획득합니다.</p>
                     </div>
                     <div>
-                        <p class="font-semibold">🎯 선호성 점수 (총 102점 만점):</p>
-                        <p>- <strong>(교차 질문)</strong> [나의 선호]와 [파트너의 실제]가 <strong>완전히 일치</strong>하면 <strong>12점</strong>, <strong>'성향 그룹'</strong>만 일치하면 <strong>8점</strong>을 얻습니다. (총 72점)<br>
-                           - <strong>(동적 질문)</strong> [나의 선호 심도]와 [파트너의 선호 심도]의 <strong>차이가 적을수록</strong> 높은 점수를 얻습니다. (<strong>완전 일치: 10점, 1칸 차이: 8점, 2칸 차이: 6점, 3칸 차이: 4점</strong>) (총 30점)</p>
+                        <p class="font-semibold">🤝 '유사성' 점수 (총점 중 15점):</p>
+                        <p>- '유사성' 질문(12개)에서 두 분의 답변이 얼마나 일치하는지 계산하여, <strong>최대 15점</strong>의 보너스 점수를 획득합니다.</p>
                     </div>
                     <div>
-                        <p class="font-semibold">✨ '결' 모양 점수 (총 600점 만점):</p>
-                        <p>- 두 분의 '결' 성향 분포(방사형 그래프)가 얼마나 비슷한지 계산하여 <strong>최대 600점</strong>의 점수를 총점에 반영합니다. (총점 비중 **75%** 이상!)</p>
+                        <p class="font-semibold">🎯 '선호성' 점수 (총점 중 15점):</p>
+                        <p>- '선호성' 질문(6개)에서 두 분이 서로 원하는 모습과 얼마나 일치하는지 계산하여, <strong>최대 15점</strong>의 보너스 점수를 획득합니다.</p>
                     </div>
-                    <!-- '결' 상세 설명 복원 -->
+                    <!-- '결' 상세 설명 -->
                     <div id="group-descriptions" class="space-y-3 text-xs mt-4 pt-4 border-t border-indigo-200">
                         <p class="font-semibold text-sm text-indigo-800">※ 6가지 성향 그룹 (결)</p>
                         <!-- Descriptions will be injected here by JS -->
@@ -124,50 +124,73 @@
             </details>
         </div>
 
-        <!-- '결' 모양 점수 계산 상세 안내 (새로 추가된 블록) -->
+        <!-- '결' 모양 점수 계산 상세 -->
         <div class="mb-8 max-w-4xl mx-auto bg-green-50 p-4 rounded-lg text-sm text-gray-700 border border-green-200">
             <details>
-                <summary class="font-semibold text-center text-green-800 mb-2 cursor-pointer">📈 '결' 모양 점수 계산 상세 안내 (클릭하여 확인)</summary>
+                <summary class="font-semibold text-center text-green-800 mb-2 cursor-pointer">📈 '결' 모양 점수 (70점) 계산 상세 (클릭)</summary>
                 <div class="mt-2 space-y-3">
-                    <p>'결 모양 점수'는 현재 **총점의 75% 이상을 차지하는 가장 중요한 핵심 점수**입니다. 이 점수가 어떻게 계산되는지 구체적으로 설명해 드릴게요.</p>
-                    <p>'결 모양 점수'는 두 분의 **답변 성향 분포(%)**가 얼마나 똑같이 생겼는지(즉, 방사형 그래프 모양이 얼마나 겹치는지)를 수학적으로 계산합니다.</p>
-                    
-                    <p class="font-semibold mt-2">계산 과정은 다음과 같습니다.</p>
-                    
+                    <p>'결' 모양 점수는 <strong>총점의 70%</strong>를 차지하는 가장 중요한 기본 점수입니다. 계산 과정은 다음과 같습니다.</p>
                     <ol class="list-decimal list-inside space-y-2">
                         <li>
                             <strong>'결'별 답변 수 집계:</strong><br>
-                            두 분이 '나의 모습'으로 답한 18개 질문을 6가지 '결' (감성, 이성, 안정, 활동, 자유, 조화)로 분류하여 각각 몇 개인지 개수를 셉니다.<br>
-                            <em class="text-xs text-gray-600">예: 남성 = {감성: 5개, 이성: 3개, ...}, 여성 = {감성: 8개, 이성: 1개, ...}</em>
+                            두 분이 '나의 모습'으로 답한 18개 질문을 6가지 '결'로 분류하여 개수를 셉니다.
                         </li>
                         <li>
                             <strong>'결'별 답변 비율(%) 계산:</strong><br>
-                            18개의 답변 중 각 '결'이 몇 %의 비중을 차지하는지 계산합니다. (이것이 방사형 그래프의 실제 모양을 결정합니다.)<br>
-                            <em class="text-xs text-gray-600">예: 남성 '감성' 비율 = 5 / 18 = 27.8%, 여성 '감성' 비율 = 8 / 18 = 44.4%</em>
+                            18개의 답변 중 각 '결'이 몇 %의 비중을 차지하는지 계산합니다. (방사형 그래프 모양)
                         </li>
                         <li>
-                            <strong>두 분의 '결' 비율 비교 (핵심 로직):</strong><br>
-                            두 분의 '결' 비율(%)을 1:1로 비교하여, **둘 중 더 낮은 값**을 가져옵니다. 이것이 두 그래프가 '겹치는 영역'입니다.<br>
-                            <em class="text-xs text-gray-600">예: '감성' 비교 (남 27.8% vs 여 44.4%) -> 겹치는 영역은 27.8%</em>
+                            <strong>두 분의 '결' 비율 비교 (핵심):</strong><br>
+                            두 분의 '결' 비율(%)을 1:1로 비교하여, <strong>둘 중 더 낮은 값</strong>을 가져옵니다. (그래프가 겹치는 영역)
                         </li>
                         <li>
                             <strong>'결 모양 유사도' (0~100%) 계산:</strong><br>
-                            3번 과정에서 찾은 '겹치는 영역'(더 낮은 값)을 6가지 '결'에 대해 모두 더합니다. 이 합계가 바로 두 분의 '결 모양 유사도'입니다.<br>
-                            <em class="text-xs text-gray-600">만약 두 분의 분포가 완전히 똑같다면 이 합계는 100%(1.0)가 됩니다.</em>
+                            3번에서 찾은 '겹치는 영역'을 6가지 '결'에 대해 모두 더합니다. 이 합계가 두 분의 '결 모양 유사도'입니다.
                         </li>
                         <li>
-                            <strong>최종 점수 환산 (최대 600점):</strong><br>
-                            4번에서 계산된 '결 모양 유사도'(%)에 **최대 배점인 600점**을 곱하여 최종 '결 모양 점수'를 도출합니다.<br>
-                            <em class="text-xs text-gray-600">예: '결 모양 유사도'가 85%(0.85)일 경우 -> 0.85 * 600점 = 510점</em>
+                            <strong>최종 점수 환산 (최대 70점):</strong><br>
+                            '결 모양 유사도'(%)에 <strong>최대 배점인 70점</strong>을 곱하여 최종 '결 모양 점수'를 도출합니다.<br>
+                            <span class="text-xs text-gray-600"> (예: 유사도 85% 시 -> 0.85 * 70점 = 59.5점 획득)</span>
                         </li>
                     </ol>
-
-                    <p class="font-semibold mt-2">
-                        결론: 이 방식은 6가지 '결'의 전체적인 비율 분포가 얼마나 비슷한지를 정밀하게 측정합니다. 따라서 이 '결 모양 점수'가 높다는 것은 두 분의 근본적인 성향 분포가 매우 비슷하다는 확실한 증거가 됩니다.
-                    </p>
                 </div>
             </details>
         </div>
+        
+        <!-- (NEW) 유사성/선호성 점수 계산 상세 -->
+        <div class="mb-8 max-w-4xl mx-auto bg-yellow-50 p-4 rounded-lg text-sm text-gray-700 border border-yellow-200" id="bonus-score-details">
+            <details>
+                <summary class="font-semibold text-center text-yellow-800 mb-2 cursor-pointer">📊 보너스 점수 (30점) 계산 상세 (클릭)</summary>
+                <div class="mt-2 space-y-3">
+                    <p>보너스 점수는 두 분이 서로 얼마나 일치하고(유사성), 서로에게 맞춰주는지(선호성)를 봅니다.</p>
+                    <div class="pt-2">
+                        <p class="font-semibold">🤝 '유사성' 보너스 (최대 15점)</p>
+                        <p>- 12개의 '유사성' 질문을 통해 <strong>최대 72점</strong>의 원점수를 획득한 뒤, 15점 만점으로 환산합니다.</p>
+                        <ul class="list-disc list-inside text-xs text-gray-600 pl-2">
+                            <li><strong>완전 일치 (6점):</strong> 두 분의 답변이 정확히 일치</li>
+                            <li><strong>성향 일치 (5점):</strong> 답변은 다르나, 같은 '성향 그룹(결)'에 속함</li>
+                        </ul>
+                    </div>
+                    <div class="pt-2">
+                        <p class="font-semibold">🎯 '선호성' 보너스 (최대 15점)</p>
+                        <p>- 6개의 '선호성' 질문을 통해 <strong>최대 102점</strong>의 원점수를 획득한 뒤, 15점 만점으로 환산합니다.</p>
+                        <p class="font-medium text-xs text-gray-700 pt-1 pl-2">1. (교차) 질문 (3문항 x 양방향 = 6회)</p>
+                        <ul class="list-disc list-inside text-xs text-gray-600 pl-4">
+                            <li><strong>완전 일치 (12점):</strong> [나의 선호]와 [파트너의 실제] 답변이 정확히 일치</li>
+                            <li><strong>성향 일치 (8점):</strong> 답변은 다르나, 같은 '성향 그룹(결)'에 속함</li>
+                        </ul>
+                        <p class="font-medium text-xs text-gray-700 pt-1 pl-2">2. (동적) 질문 (3문항 x 심도 비교 = 3회)</p>
+                        <ul class="list-disc list-inside text-xs text-gray-600 pl-4">
+                            <li><strong>심도 완전 일치 (10점):</strong> (예: 둘 다 '심도 1' 선택)</li>
+                            <li><strong>심도 1칸 차이 (8점):</strong> (예: '심도 1' vs '심도 2')</li>
+                            <li><strong>심도 2칸 차이 (6점):</strong> (예: '심도 1' vs '심도 3')</li>
+                            <li><strong>심도 3칸 차이 (4점):</strong> (예: '심도 1' vs 'any')</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+        </div>
+
 
         <div id="question-section">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -204,22 +227,22 @@
                     <div id="score-bar" class="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
                 </div>
                 
-                <!-- 분리된 점수 표시 -->
+                <!-- (수정) 100점 만점 환산 점수 표시 -->
                 <div class="flex justify-center gap-4 mt-6 max-w-lg mx-auto">
-                    <div class="flex-1 text-center p-3 bg-blue-50 rounded-lg">
-                        <p class="font-semibold text-gray-700">🤝 유사성 점수</p>
-                        <p id="similarity-score" class="text-2xl font-bold text-blue-600">0점</p>
-                    </div>
-                    <div class="flex-1 text-center p-3 bg-pink-50 rounded-lg">
-                        <p class="font-semibold text-gray-700">🎯 선호성 점수</p>
-                        <p id="preference-score" class="text-2xl font-bold text-pink-600">0점</p>
-                    </div>
                     <div class="flex-1 text-center p-3 bg-green-50 rounded-lg">
                         <p class="font-semibold text-gray-700">✨ '결' 모양</p>
                         <p id="shape-score" class="text-2xl font-bold text-green-600">0점</p>
                     </div>
+                    <div class="flex-1 text-center p-3 bg-blue-50 rounded-lg">
+                        <p class="font-semibold text-gray-700">🤝 유사성</p>
+                        <p id="similarity-score" class="text-2xl font-bold text-blue-600">0점</p>
+                    </div>
+                    <div class="flex-1 text-center p-3 bg-pink-50 rounded-lg">
+                        <p class="font-semibold text-gray-700">🎯 선호성</p>
+                        <p id="preference-score" class="text-2xl font-bold text-pink-600">0점</p>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">(각 100점 만점 환산)</p>
+                <p class="text-xs text-gray-400 mt-2">(각 100점 만점 환산 / 총점은 (결 70 + 유 15 + 선 15)로 계산)</p>
             </div>
 
             <!-- 상세 점수 분석 -->
@@ -404,7 +427,7 @@
                      { 
                         value: 'conservative', text: '손 잡는 것 정도는 괜찮지만, 그 이상은 조심스러움 (보수적가치관)', tag: '#보수적가치관',
                         followup: {
-                            text: '연인이 나보다 스킨십에 개방적이라면, 당신의 선호는?',
+                            text: '연인이 나보다 스킨십에 개방적이라면?',
                             options: [
                                 { value: '1', text: '연인에게 맞춰주려고 노력함 (심도 1)' },
                                 { value: '2', text: '서로 조율하며 합의점을 찾음 (심도 2)' },
@@ -416,7 +439,7 @@
                      { 
                         value: 'liberal', text: '주변에 피해만 주지 않는다면 자유롭게 표현 가능 (자유로운표현)', tag: '#자유로운표현',
                         followup: {
-                            text: '연인이 나보다 스킨십에 보수적이라면, 당신의 선호는?',
+                            text: '연인이 나보다 스킨십에 보수적이라면?',
                             options: [
                                 { value: '1', text: '연인에게 맞춰주려고 노력함 (심도 1)' },
                                 { value: '2', text: '서로 조율하며 합의점을 찾음 (심도 2)' },
@@ -428,7 +451,7 @@
                      { 
                         value: 'private', text: '애정표현은 둘만 있는 사적인 공간에서 하는 것이 좋음 (사생활중시)', tag: '#사생활중시',
                         followup: {
-                            text: '연인이 공공장소에서 스킨십을 시도한다면, 당신의 선호는?',
+                            text: '연인이 공공장소에서 스킨십을 시도한다면?',
                             options: [
                                 { value: '1', text: '일단 받아주지만, 나중에 따로 이야기함 (심도 1)' },
                                 { value: '2', text: '가볍게 피하거나, 장소를 옮기자고 제안함 (심도 2)' },
@@ -440,7 +463,7 @@
                      { 
                         value: 'adaptive', text: '장소와 분위기에 따라 유연하게 달라질 수 있음 (상황적응형)', tag: '#상황적응형',
                         followup: {
-                            text: '연인이 TPO에 맞지 않는 스킨십을 시도한다면, 당신의 선호는?',
+                            text: '연인이 TPO에 맞지 않는 스킨십을 시도한다면?',
                             options: [
                                 { value: '1', text: '일단 받아주지만, 나중에 따로 이야기함 (심도 1)' },
                                 { value: '2', text: '눈치를 주거나, 장난스럽게 타이름 (심도 2)' },
@@ -546,25 +569,24 @@
                 text: '가사(집안일) 분담에 대한 당신의 생각은?',
                 options: [
                      { 
-                        value: 'role', text: '각자 잘하는 일을 정해서 명확하게 역할을 나눔 (효율중시형)', tag: '#효율중시형',
+                        value: 'efficient', text: '각자 잘하는 일을 정해서 명확하게 역할을 나눔 (효율중시형)', tag: '#효율중시형',
                         followup: {
-                            text: '만약 상대방이 자신의 역할을 제대로 하지 않는다면, 당신의 선호는?',
+                            text: '만약 상대방이 자신의 역할을 제대로 하지 않는다면?',
                             options: [
-                                { value: '1', text: '즉시 피드백하고, 역할을 재조정함 (심도 1)' },
-                                { value: '2', text: '일단 내가 대신 하고, 나중에 기분 좋게 이야기함 (심도 2)' },
-                                { value: '3', text: '말없이 내가 그냥 함. (갈등 회피) (심도 3)' },
+                                { value: '1', text: '즉시 피드백하고 다시 역할을 조율함 (심도 1)' },
+                                { value: '2', text: '몇 번 참고 기다리다가 좋게 이야기함 (심도 2)' },
+                                { value: '3', text: '그냥 내가 참고 해버림 (심도 3)' },
                                 { value: '4', text: '딱히 상관없음 (any)' }
                             ]
                         }
                     },
                      { 
-                        value: 'auto', text: '정해놓지 않고, 시간이 되거나 먼저 보는 사람이 함 (자율형)', tag: '#자율형',
+                        value: 'autonomy', text: '정해놓지 않고, 시간이 되거나 먼저 보는 사람이 함 (자율형)', tag: '#자율형',
                         followup: {
-                            text: '만약 나만 계속 집안일을 하게 된다면, 당신의 선호는?',
+                            text: '만약 나만 계속 집안일을 하게 된다면?',
                             options: [
-                                // *** 심도 순서 수정 (지적사항 반영) ***
-                                { value: '2', text: '기분이 나쁨, 결국 역할을 정하자고 말함 (심도 2)' }, // 기존 심도 2
-                                { value: '1', text: '눈치껏 상대방도 하길 바람 (심도 1)' }, // 기존 심도 1
+                                { value: '2', text: '기분이 나쁨, 결국 역할을 정하자고 말함 (심도 2)' }, // '심도 2'
+                                { value: '1', text: '눈치껏 상대방도 하길 바람 (심도 1)' }, // '심도 1'
                                 { value: '3', text: '상관없음, 내가 더 깔끔하니 내가 함 (심도 3)' },
                                 { value: '4', text: '딱히 상관없음 (any)' }
                             ]
@@ -573,11 +595,11 @@
                      { 
                         value: 'plan', text: '주말 등 특정 시간을 정해 함께 집중적으로 처리 (계획형)', tag: '#계획형',
                         followup: {
-                            text: '상대방이 계획한 시간에 자꾸 딴짓을 한다면, 당신의 선호는?',
+                            text: '만약 상대방이 계획된 시간에 자꾸 딴짓을 한다면?',
                             options: [
                                 { value: '1', text: '계획대로 하자고 단호하게 말함 (심도 1)' },
-                                { value: '2', text: '일단 혼자 시작하고, 눈치를 줌 (심도 2)' },
-                                { value: '3', text: '이번만 봐주고, 다음 주로 미룸 (심도 3)' },
+                                { value: '2', text: '기다려주되, 빨리 끝내자고 재촉함 (심도 2)' },
+                                { value: '3', text: '어쩔 수 없음. 나중에 하거나 내가 먼저 함 (심도 3)' },
                                 { value: '4', text: '딱히 상관없음 (any)' }
                             ]
                         }
@@ -585,11 +607,11 @@
                      { 
                         value: 'system', text: '가사도우미, 식기세척기 등 시스템을 적극 활용 (편리성추구)', tag: '#편리성추구',
                         followup: {
-                            text: '상대방이 시스템 활용(비용)을 아까워한다면, 당신의 선호는?',
+                            text: '만약 상대방이 시스템 활용에 돈 아까워 한다면?',
                             options: [
-                                { value: '1', text: '비용보다 시간/편의가 중요함을 논리적으로 설득함 (심도 1)' },
-                                { value: '2', text: '일단 시스템 없이 살아보고, 불편하면 다시 설득함 (심도 2)' },
-                                { value: '3', text: '상대방의 의견을 존중하여, 시스템을 포기함 (심도 3)' },
+                                { value: '1', text: '편리함과 시간의 가치를 설득함 (심도 1)' },
+                                { value: '2', text: '상대방을 설득하되, 일부만 사용하며 합의함 (심도 2)' },
+                                { value: '3', text: '상대방 의견을 존중하여 사용하지 않음 (심도 3)' },
                                 { value: '4', text: '딱히 상관없음 (any)' }
                             ]
                         }
@@ -629,7 +651,7 @@
                      { value: 'stability', text: '정서적 안정감과 평생의 동반자를 얻기 위해 (안정지향형)', tag: '#안정지향형'},
                      { value: 'family', text: '사랑하는 사람과 가정을 꾸리기 위해 (가정중심형)', tag: '#가정중심형'},
                      { value: 'growth', text: '더 나은 미래를 함께 계획하고 성장하기 위해 (성장지향형)', tag: '#성장지향형'},
-                     { value: 'enjoy', text: '함께 다양한 경험을 하며 인생을 더 즐겁게 살기 위해 (모험추구형)', tag: '#모험추구형'}
+                     { value: 'fun', text: '함께 다양한 경험을 하며 인생을 더 즐겁게 살기 위해 (모험추구형)', tag: '#모험추구형'}
                  ]
             },
             {
@@ -640,21 +662,22 @@
                 options: [
                      { value: 'future', text: '미래 가치를 보고 서울 중심지 아파트 선택 (미래가치중시)', tag: '#미래가치중시'},
                      { value: 'present', text: '현재의 안정을 위해 경기도 신축 아파트 선택 (현재안정중시)', tag: '#현재안정중시'},
-                     { value: 'commute', text: '직주근접이 가장 중요함 (실용주의형)', tag: '#실용주의형'},
+                     { value: 'location', text: '직주근접이 가장 중요함 (실용주의형)', tag: '#실용주의형'},
                      { value: 'interior', text: '개인의 취향이 담긴 인테리어의 집을 원함 (심미주의형)', tag: '#심미주의형'}
                  ]
             }
         ];
-        
+                
         // (이하 태그 그룹, 프로필, 단어 정의는 원본과 동일)
         const tagGroups = {
             EMOTIONAL_CONNECT: { tags: ['#낭만주의형', '#관계중심형', '#세심함중시', '#스킨십중시', '#정서적지지', '#배려형', '#감정표현형', '#긍정적강화', '#가족중심형', '#다자녀선호', '#시간공유형'] },
             PRACTICAL_RATIONAL: { tags: ['#실용주의형', '#원칙주의형', '#현실주의형', '#논리적대화', '#문제해결형', '#효율중시형', '#피드백제공', '#미래가치중시'] },
             STABILITY_ORIENTED: { tags: ['#안정지향형', '#안정적투자', '#계획형', '#집순이/집돌이', '#보수적가치관', '#현재안정중시', '#전통적가치관', '#정적인'] },
             ACTIVE_EXPERIENCE: { tags: ['#경험중시형', '#성취지향형', '#사교형', '#활동적인', '#모험추구형', '#이벤트선호', '#과감한투자', '#공격적투자', '#자기계발형', '#성장지향형'] },
-            AUTONOMY_FLEXIBILITY: { tags: ['#개인주의형', '#쿨한연애', '#자유로운표현', '#사생활중시', '#자유추구형', '#독립성중시', '#자율형', '#갈등회피형', '#YOLO'] }, // #YOLO 태그 추가
+            AUTONOMY_FLEXIBILITY: { tags: ['#개인주의형', '#쿨한연애', '#자유로운표현', '#사생활중시', '#자유추구형', '#독립성중시', '#자율형', '#갈등회피형', '#YOLO'] }, // #YOLO 추가
             ADAPTIVE_BALANCED: { tags: ['#상황적응형', '#감정조절형', '#편리성추구', '#심미주의형', '#차분한'] }
         };
+
         const sensoryProfiles = {
             EMOTIONAL_CONNECT: { name: "감성의 결", description: "사람들과의 따뜻한 유대와 감정적 교류에서 행복을 느끼는 사람입니다. 타인의 마음에 깊이 공감하며, 관계를 통해 안정감을 얻는 섬세한 '결'을 가졌습니다.", background: "bg-pink-400", colorCode: "#F9A8D4" },
             PRACTICAL_RATIONAL: { name: "이성의 결", description: "명확한 논리와 효율성을 중요하게 생각하며, 문제 해결에 뛰어난 능력을 보입니다. 감정보다 이성적인 판단을 우선시하는 시원하고 투명한 '결'을 가졌습니다.", background: "bg-blue-500", colorCode: "#3B82F6" },
@@ -688,7 +711,7 @@
         const scoreBarEl = document.getElementById('score-bar');
         const similarityScoreEl = document.getElementById('similarity-score');
         const preferenceScoreEl = document.getElementById('preference-score');
-        const shapeScoreEl = document.getElementById('shape-score'); // '결 모양 점수' DOM
+        const shapeScoreEl = document.getElementById('shape-score');
         const scoreBreakdownEl = document.getElementById('score-breakdown');
 
         const resultVisualMaleEl = document.getElementById('result-visual-male');
@@ -712,6 +735,7 @@
 
         // --- 3. 핵심 유틸 함수 ---
         function findTagGroupKey(tag) {
+            if (!tag) return null;
             for (const key in tagGroups) {
                 if (tagGroups[key].tags.includes(tag)) { return key; }
             }
@@ -722,7 +746,7 @@
             return arr[Math.floor(Math.random() * arr.length)];
         }
         
-        // --- 4. 질문 렌더링 로직 (뱃지, 커스텀 라디오 적용) ---
+        // --- 4. 질문 렌더링 로직 ---
         
         /** 동적 질문 생성 함수 */
         function handleDynamic(radio, qId, gender, followupDataStr) {
@@ -742,12 +766,10 @@
             followupContainer.className = 'dynamic-followup';
 
             const optionsHTML = followupData.options.map((opt, index) => `
-                <div>
-                    <input type="radio" name="${qId}-followup-${gender}" value="${opt.value}" id="${qId}-${gender}-followup-${index}" class="hidden-radio">
-                    <label for="${qId}-${gender}-followup-${index}" class="option-label bg-white">
-                        ${opt.text}
-                    </label>
-                </div>
+                <input type="radio" name="${qId}-followup-${gender}" value="${opt.value}" id="${qId}-followup-${gender}-${index}" class="hidden-radio">
+                <label for="${qId}-followup-${gender}-${index}" class="option-label">
+                    ${opt.text}
+                </label>
             `).join('');
 
             followupContainer.innerHTML = `
@@ -758,24 +780,19 @@
             questionCard.appendChild(followupContainer);
         }
 
-        /** 질문 유형 뱃지 HTML 생성 */
-        function createBadgeHTML(type) {
-            switch (type) {
-                case 'similarity':
-                    return '<span class="question-type-badge text-blue-700 bg-blue-100 border-blue-300">유사성</span>';
-                case 'crossover':
-                    return '<span class="question-type-badge text-pink-700 bg-pink-100 border-pink-300">선호성 (교차)</span>';
-                case 'dynamic':
-                    return '<span class="question-type-badge text-amber-700 bg-amber-100 border-amber-300">선호성 (동적)</span>';
-                default:
-                    return '';
-            }
+        /** 질문 유형 뱃지 HTML */
+        function badgeHTML(type) {
+            let text = '', color = '';
+            if (type === 'similarity') { text = '유사성'; color = 'blue'; }
+            else if (type === 'crossover') { text = '선호성 (교차)'; color = 'pink'; }
+            else if (type === 'dynamic') { text = '선호성 (동적)'; color = 'amber'; }
+            
+            return `<span class="question-type-badge bg-${color}-100 text-${color}-800 border-${color}-300">${text}</span>`;
         }
 
         /** 질문 유형에 따라 HTML 생성 */
         function createQuestionHTML(q, gender) {
             let html = '';
-            const badgeHTML = createBadgeHTML(q.type);
             
             // 공통 옵션 생성기 (메인 질문용)
             const mainOptionsHTML = q.options.map((opt, index) => {
@@ -785,51 +802,48 @@
                     const followupDataStr = encodeURIComponent(JSON.stringify(opt.followup));
                     onChangeEvent = `onchange="handleDynamic(this, '${q.id}', '${gender}', '${followupDataStr}')"`;
                 }
-                // 커스텀 라디오 버튼 input + label
                 return `
-                    <div>
-                        <input type="radio" name="${q.id}-me-${gender}" value="${opt.value}" data-tag="${opt.tag}" id="${q.id}-me-${gender}-${index}" class="hidden-radio" ${onChangeEvent}>
-                        <label for="${q.id}-me-${gender}-${index}" class="option-label">
-                            ${opt.text}
-                        </label>
-                    </div>
+                    <input type="radio" name="${q.id}-me-${gender}" value="${opt.value}" data-tag="${opt.tag}" id="${q.id}-me-${gender}-${index}" class="hidden-radio" ${onChangeEvent}>
+                    <label for="${q.id}-me-${gender}-${index}" class="option-label">
+                        ${opt.text}
+                    </label>
                 `;
             }).join('');
 
             switch (q.type) {
                 case 'similarity':
-                    html = `<div class="question-card rounded-lg shadow-sm">
-                                ${badgeHTML}
+                    html = `<div class="question-card bg-white rounded-lg shadow-sm border">
+                                ${badgeHTML(q.type)}
                                 <p class="font-semibold mb-3 text-gray-800">${q.text}</p>
                                 <div class="space-y-2">${mainOptionsHTML}</div>
                             </div>`;
                     break;
                 case 'crossover':
                     const partnerOptionsHTML = q.options.map((opt, index) => `
-                        <div>
-                            <input type="radio" name="${q.id}-partner-${gender}" value="${opt.value}" id="${q.id}-partner-${gender}-${index}" class="hidden-radio">
-                            <label for="${q.id}-partner-${gender}-${index}" class="option-label">
-                                ${opt.text}
-                            </label>
-                        </div>
+                        <input type="radio" name="${q.id}-partner-${gender}" value="${opt.value}" id="${q.id}-partner-${gender}-${index}" class="hidden-radio">
+                        <label for="${q.id}-partner-${gender}-${index}" class="option-label">
+                            ${opt.text}
+                        </label>
                     `).join('');
                     
-                    html = `<div class="question-card rounded-lg shadow-sm space-y-4">
-                                ${badgeHTML}
-                                <div>
-                                    <p class="font-semibold mb-3 text-gray-800">${q.text_me}</p>
-                                    <div class="space-y-2">${mainOptionsHTML}</div>
-                                </div>
-                                <hr class="my-4 border-dashed">
-                                <div>
-                                    <p class="font-semibold mb-3 text-gray-800">${q.text_partner}</p>
-                                    <div class="space-y-2">${partnerOptionsHTML}</div>
+                    html = `<div class="question-card bg-white rounded-lg shadow-sm border">
+                                ${badgeHTML(q.type)}
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="font-semibold mb-3 text-gray-800">${q.text_me}</p>
+                                        <div class="space-y-2">${mainOptionsHTML}</div>
+                                    </div>
+                                    <hr class="my-4 border-dashed border-gray-300">
+                                    <div>
+                                        <p class="font-semibold mb-3 text-gray-800">${q.text_partner}</p>
+                                        <div class="space-y-2">${partnerOptionsHTML}</div>
+                                    </div>
                                 </div>
                             </div>`;
                     break;
                 case 'dynamic':
-                    html = `<div class="question-card rounded-lg shadow-sm">
-                                ${badgeHTML}
+                    html = `<div class="question-card bg-white rounded-lg shadow-sm border">
+                                ${badgeHTML(q.type)}
                                 <p class="font-semibold mb-3 text-gray-800">${q.text}</p>
                                 <div class="space-y-2">${mainOptionsHTML}</div>
                                 <!-- 동적 질문은 여기에 삽입됨 -->
@@ -843,10 +857,6 @@
         function renderQuestions() {
             let maleHTML = '', femaleHTML = '', lastMaleBrainType = '', lastFemaleBrainType = '';
             totalExpectedAnswers = 0; // 총 답변 수 초기화
-            
-            const similarityCount = questions.filter(q => q.type === 'similarity').length; // 12개
-            const crossoverCount = questions.filter(q => q.type === 'crossover').length;   // 3개
-            const dynamicCount = questions.filter(q => q.type === 'dynamic').length;     // 3개
 
             questions.forEach(q => {
                 if (q.brainType !== lastMaleBrainType) {
@@ -860,25 +870,25 @@
                     lastFemaleBrainType = q.brainType;
                 }
                 femaleHTML += createQuestionHTML(q, 'female');
-            });
-            
-            // 답변해야 할 총 라디오 그룹 수 계산 (남/여 공통)
-            // 유사성: 1개, 교차: 2개, 동적: 2개
-            totalExpectedAnswers = (similarityCount * 1) + (crossoverCount * 2) + (dynamicCount * 2); // 12 + 6 + 6 = 24
 
+                // 답변해야 할 총 라디오 그룹 수 계산 (남/여 각각)
+                if (q.type === 'similarity') totalExpectedAnswers += 1;
+                else if (q.type === 'crossover') totalExpectedAnswers += 2;
+                else if (q.type === 'dynamic') totalExpectedAnswers += 2; // (메인 1 + 동적 1)
+            });
             maleQuestionsContainer.innerHTML = maleHTML;
             femaleQuestionsContainer.innerHTML = femaleHTML;
         }
 
-        /** '결' 상세 설명 렌더링 */
+        /** '결' 설명 렌더링 */
         function renderGroupDescriptions() {
             let html = '';
             for (const key in sensoryProfiles) {
                 const profile = sensoryProfiles[key];
                 const tags = tagGroups[key].tags.join(', ');
-                html += `<div class="p-2 bg-white rounded-md">
+                html += `<div class="p-2 bg-white rounded-md border">
                             <p><strong>${profile.name}:</strong> ${profile.description}</p>
-                            <p class="mt-1 text-gray-500">포함된 태그: ${tags}</p>
+                            <p class="mt-1 text-gray-500 text-xs">포함된 태그: ${tags}</p>
                          </div>`;
             }
             groupDescriptionsEl.innerHTML = html;
@@ -911,7 +921,14 @@
                 }]
             };
             const options = {
-                scales: { r: { angleLines: { display: true }, suggestedMin: 0, suggestedMax: Math.max(...Object.values(data), 5) } }, // 최대값 5로 조정
+                scales: { 
+                    r: { 
+                        angleLines: { display: true }, 
+                        suggestedMin: 0, 
+                        suggestedMax: Math.max(...Object.values(data), 5), // 최대값 보정
+                        pointLabels: { fontSize: 14 } // 레이블 폰트 크기
+                    } 
+                },
                 plugins: { legend: { position: 'bottom', } }
             };
              window[canvasId + 'ChartInstance'] = new Chart(ctx, { type: 'radar', data: chartData, options: options });
@@ -939,179 +956,180 @@
                 ]
             };
             const options = {
-                 scales: { r: { angleLines: { display: true }, suggestedMin: 0, suggestedMax: Math.max(...Object.values(maleData), ...Object.values(femaleData), 5) } }, // 최대값 5로 조정
+                 scales: { 
+                    r: { 
+                        angleLines: { display: true }, 
+                        suggestedMin: 0, 
+                        suggestedMax: Math.max(...Object.values(maleData), ...Object.values(femaleData), 5), // 최대값 보정
+                        pointLabels: { fontSize: 14 } // 레이블 폰트 크기
+                    } 
+                },
                  plugins: { legend: { position: 'bottom', } }
             };
             window[canvasId + 'ChartInstance'] = new Chart(ctx, { type: 'radar', data: chartData, options: options });
             return window[canvasId + 'ChartInstance'];
         }
         
-        // --- 6. 결과 계산 로직 ---
-        
-        /** '결' 모양 점수(유사도) 계산 함수 */
-        function calculateShapeSimilarity(counts1, counts2) {
-            const keys = Object.keys(sensoryProfiles);
-            let totalVector1 = 0, totalVector2 = 0;
-            
-            // 전체 벡터 합계 계산 (분포의 총량)
-            keys.forEach(key => {
-                totalVector1 += (counts1[key] || 0);
-                totalVector2 += (counts2[key] || 0);
-            });
-            
-            if (totalVector1 === 0 || totalVector2 === 0) return 0; // 둘 중 하나라도 답변이 없으면 0점
-
-            let minSum = 0;
-            // 각 '결'별로 정규화된 값(비율)의 차이를 계산
-            keys.forEach(key => {
-                const norm1 = (counts1[key] || 0) / totalVector1;
-                const norm2 = (counts2[key] || 0) / totalVector2;
-                minSum += Math.min(norm1, norm2); // 두 비율 중 작은 값을 더함 (교집합 영역)
-            });
-
-            // minSum은 0 (완전 다름) ~ 1 (완전 같음) 사이의 값을 가짐
-            return minSum;
-        }
-
-
-        /** 심도 차이에 따른 점수 반환 함수 (점수 상향) */
-        function getDynamicScoreByDepth(depth1, depth2) {
-            // value가 문자열이므로 숫자로 변환
-            const d1 = parseInt(depth1, 10);
-            const d2 = parseInt(depth2, 10);
-            
-            const diff = Math.abs(d1 - d2); // 심도 차이 계산 (any는 4)
-            
-            switch (diff) {
-                case 0: return 10; // 완전 일치
-                case 1: return 8;  // 1칸 차이
-                case 2: return 6;  // 2칸 차이
-                case 3: return 4;  // 3칸 차이 (예: 1 vs 4)
-                default: return 0;
-            }
-        }
-
+        // --- 6. 결과 계산 로직 (100점 만점: 결 70 + 유사성 15 + 선호성 15) ---
         function calculateResults() {
             // 답변 완료 여부 확인
             const maleAnsweredCount = document.querySelectorAll('#male-questions input:checked').length;
-            const femaleAnsweredCount = document.querySelectorAll('#female-questions input:checked').length;
-
-            if (maleAnsweredCount < totalExpectedAnswers || femaleAnsweredCount < totalExpectedAnswers) {
+            const femaleAnsweredCount = document.querySelectorAll('#female-questions input:checked');
+            if (maleAnsweredCount < totalExpectedAnswers || femaleAnsweredCount.length < totalExpectedAnswers) {
                 warningMessage.classList.remove('hidden');
                 return;
             }
             warningMessage.classList.add('hidden');
 
-            let similarityScore = 0;
-            let maxSimilarityScore = 0;
-            let preferenceScore = 0;
-            let maxPreferenceScore = 0;
+            let rawSimilarityScore = 0;
+            let maxRawSimilarityScore = 0;
+            let rawPreferenceScore = 0;
+            let maxRawPreferenceScore = 0;
 
             const maleTags = {}, femaleTags = {}, maleGroupCounts = {}, femaleGroupCounts = {};
+            const maleMeNodes = {}, femaleMeNodes = {}; // '나의' 답변 노드 저장
             
+            // 1. '나의' 답변 및 성향 집계 (모든 질문 루프)
             questions.forEach((q) => {
-                // '나의' 답변에 대한 정보 (성향 분석용)
                 const maleMeNode = document.querySelector(`input[name="${q.id}-me-male"]:checked`);
                 const femaleMeNode = document.querySelector(`input[name="${q.id}-me-female"]:checked`);
+                maleMeNodes[q.id] = maleMeNode; // 나중 비교를 위해 저장
+                femaleMeNodes[q.id] = femaleMeNode; // 나중 비교를 위해 저장
+
                 const maleMeTag = maleMeNode.dataset.tag;
                 const femaleMeTag = femaleMeNode.dataset.tag;
-
-                const maleGroupKey = findTagGroupKey(maleMeTag);
-                const femaleGroupKey = findTagGroupKey(femaleMeTag);
 
                 // '나의' 답변 태그 카운트 (성향 분석용)
                 if (maleMeTag) {
                     maleTags[maleMeTag] = (maleTags[maleMeTag] || 0) + 1;
+                    const maleGroupKey = findTagGroupKey(maleMeTag);
                     if(maleGroupKey) maleGroupCounts[maleGroupKey] = (maleGroupCounts[maleGroupKey] || 0) + 1;
                 }
                 if (femaleMeTag) {
                     femaleTags[femaleMeTag] = (femaleTags[femaleMeTag] || 0) + 1;
+                    const femaleGroupKey = findTagGroupKey(femaleMeTag);
                     if(femaleGroupKey) femaleGroupCounts[femaleGroupKey] = (femaleGroupCounts[femaleGroupKey] || 0) + 1;
                 }
+            });
+
+            // 2. '결' 모양 점수 계산 (최대 70점)
+            const totalQuestionsCount = questions.length; // 18
+            const maleGroupPercents = {}, femaleGroupPercents = {};
+            let shapeSimilarity = 0; // 0 ~ 1 (0% ~ 100%)
+
+            for (const key in sensoryProfiles) {
+                const malePercent = (maleGroupCounts[key] || 0) / totalQuestionsCount;
+                const femalePercent = (femaleGroupCounts[key] || 0) / totalQuestionsCount;
+                maleGroupPercents[key] = malePercent;
+                femaleGroupPercents[key] = femalePercent;
+                // 두 분포에서 겹치는 영역 (낮은 값)을 합산
+                shapeSimilarity += Math.min(malePercent, femalePercent);
+            }
+            // shapeSimilarity는 0~1 사이의 값 (예: 0.85 = 85% 유사)
+            const finalShapeScore = shapeSimilarity * 70; // 70점 만점으로 환산
+
+            
+            // 3. '유사성'/'선호성' 점수 계산 (질문 루프)
+            questions.forEach((q) => {
+                const maleMeNode = maleMeNodes[q.id];
+                const femaleMeNode = femaleMeNodes[q.id];
+                const maleMeTag = maleMeNode.dataset.tag;
+                const femaleMeTag = femaleMeNode.dataset.tag;
+                const maleGroupKey = findTagGroupKey(maleMeTag);
+                const femaleGroupKey = findTagGroupKey(femaleMeTag);
 
                 // 질문 유형별 점수 계산
                 switch (q.type) {
                     case 'similarity':
-                        maxSimilarityScore += 6; // 만점 6점 (점수 상향 5->6)
+                        maxRawSimilarityScore += 6; // 유사성 배점 (일치 6점)
                         if (maleMeNode.value === femaleMeNode.value) {
-                            similarityScore += 6; // 완전 일치
+                            rawSimilarityScore += 6; // 완전 일치
                         } else if (maleGroupKey && maleGroupKey === femaleGroupKey) {
-                            similarityScore += 5; // 성향 일치 (점수 상향 4->5)
+                            rawSimilarityScore += 5; // 성향('결') 일치
                         }
                         break;
+                    
                     case 'crossover':
-                        maxPreferenceScore += 24; // 만점 24점 (12 * 2명)
+                        maxRawPreferenceScore += 12; // 선호성 배점 (교차 12점) * 2 (양방향)
+                        maxRawPreferenceScore += 12; 
+                        
                         const malePartnerNode = document.querySelector(`input[name="${q.id}-partner-male"]:checked`);
                         const femalePartnerNode = document.querySelector(`input[name="${q.id}-partner-female"]:checked`);
-                        
+                        const malePartnerTag = q.options.find(o => o.value === malePartnerNode.value)?.tag;
+                        const femalePartnerTag = q.options.find(o => o.value === femalePartnerNode.value)?.tag;
+                        const malePartnerGroup = findTagGroupKey(malePartnerTag);
+                        const femalePartnerGroup = findTagGroupKey(femalePartnerTag);
+
                         // 남자가 원하는 파트너 모습 <-> 여자의 실제 모습
                         if (malePartnerNode.value === femaleMeNode.value) {
-                            preferenceScore += 12; // 완전 일치 (점수 상향 10->12)
-                        } else {
-                            const malePartnerTag = q.options.find(opt => opt.value === malePartnerNode.value)?.tag || femaleMeTag;
-                            const malePartnerGroup = findTagGroupKey(malePartnerTag);
-                            if (malePartnerGroup && malePartnerGroup === femaleGroupKey) {
-                                preferenceScore += 8; // 성향 일치 (점수 상향 6->8)
-                            }
+                            rawPreferenceScore += 12; // 완전 일치
+                        } else if (malePartnerGroup && malePartnerGroup === femaleGroupKey) {
+                            rawPreferenceScore += 8; // 성향('결') 일치
                         }
                         
                         // 여자가 원하는 파트너 모습 <-> 남자의 실제 모습
                         if (femalePartnerNode.value === maleMeNode.value) {
-                            preferenceScore += 12; // 완전 일치 (점수 상향 10->12)
-                        } else {
-                            const femalePartnerTag = q.options.find(opt => opt.value === femalePartnerNode.value)?.tag || maleMeTag;
-                            const femalePartnerGroup = findTagGroupKey(femalePartnerTag);
-                            if (femalePartnerGroup && femalePartnerGroup === maleGroupKey) {
-                                preferenceScore += 8; // 성향 일치 (점수 상향 6->8)
-                            }
+                            rawPreferenceScore += 12; // 완전 일치
+                        } else if (femalePartnerGroup && femalePartnerGroup === maleGroupKey) {
+                            rawPreferenceScore += 8; // 성향('결') 일치
                         }
                         break;
+                    
                     case 'dynamic':
-                        maxPreferenceScore += 10; // 만점 10점 (심도 일치)
+                        maxRawPreferenceScore += 10; // 선호성 배점 (동적 10점)
+                        
                         const maleFollowupNode = document.querySelector(`input[name="${q.id}-followup-male"]:checked`);
                         const femaleFollowupNode = document.querySelector(`input[name="${q.id}-followup-female"]:checked`);
                         
+                        // 'any'는 4로 간주
+                        const maleDepth = parseInt(maleFollowupNode.value, 10); // 1, 2, 3, 4
+                        const femaleDepth = parseInt(femaleFollowupNode.value, 10); // 1, 2, 3, 4
+                        
+                        const depthDiff = Math.abs(maleDepth - femaleDepth);
+                        
                         // [남자의 선호 심도] vs [여자의 선호 심도] 비교
-                        preferenceScore += getDynamicScoreByDepth(maleFollowupNode.value, femaleFollowupNode.value);
+                        if (depthDiff === 0) {
+                            rawPreferenceScore += 10; // 심도 완전 일치 (10점)
+                        } else if (depthDiff === 1) {
+                            rawPreferenceScore += 8; // 심도 1칸 차이 (8점)
+                        } else if (depthDiff === 2) {
+                            rawPreferenceScore += 6; // 심도 2칸 차이 (6점)
+                        } else if (depthDiff === 3) {
+                            rawPreferenceScore += 4; // 심도 3칸 차이 (4점)
+                        }
                         break;
                 }
             });
 
-            // --- 7. '결' 모양 점수 계산 ---
+            // *** 만점 재계산 확인 ***
+            // 유사성: 12개 * 6점 = 72점
+            // 선호성 (교차): 3개 * 2 (양방향) * 12점 = 72점
+            // 선호성 (동적): 3개 * 1 (심도비교) * 10점 = 30점
+            // maxRawSimilarityScore = 72
+            // maxRawPreferenceScore = 72 + 30 = 102
             
-            // 만점 재계산 (이제 루프에서 누적했으므로 카운트 필요 없음)
-            // maxSimilarityScore -> 12 * 6 = 72
-            // maxPreferenceScore -> (3 * 24) + (3 * 10) = 72 + 30 = 102
-            
-            const maxShapeScore = 600; // '결' 모양 점수 만점 (이전 300 -> 600)
-            
-            // 두 사람의 성향 분포(그래프 모양) 유사도 계산 (0 ~ 1)
-            const shapeSimilarity = calculateShapeSimilarity(maleGroupCounts, femaleGroupCounts);
-            // 유사도(%) * 만점(600점)
-            const shapeScore = Math.round(shapeSimilarity * maxShapeScore); // 0~600점
+            // 4. 보너스 점수 환산 (15점 만점)
+            const finalSimilarityScore = maxRawSimilarityScore > 0 ? (rawSimilarityScore / maxRawSimilarityScore) * 15 : 0;
+            const finalPreferenceScore = maxRawPreferenceScore > 0 ? (rawPreferenceScore / maxRawPreferenceScore) * 15 : 0;
 
+            // 5. 최종 총점 계산 (100점 만점)
+            const finalTotal = finalShapeScore + finalSimilarityScore + finalPreferenceScore;
 
-            // --- 8. 결과 표시 로직 (100점 만점 환산) ---
+            // --- 7. 결과 표시 로직 ---
+
+            // *** (수정) 100점 만점 환산 (표시용) ***
+            const displayShapeScore = Math.round(shapeSimilarity * 100); // 0-1 -> 0-100
+            const displaySimilarityScore = maxRawSimilarityScore > 0 ? Math.round((rawSimilarityScore / maxRawSimilarityScore) * 100) : 0;
+            const displayPreferenceScore = maxRawPreferenceScore > 0 ? Math.round((rawPreferenceScore / maxRawPreferenceScore) * 100) : 0;
             
-            // 1. 각 항목별 100점 만점 환산
-            const finalSimilarity = maxSimilarityScore > 0 ? Math.round((similarityScore / maxSimilarityScore) * 100) : 0;
-            const finalPreference = maxPreferenceScore > 0 ? Math.round((preferenceScore / maxPreferenceScore) * 100) : 0;
-            const finalShapeScore = maxShapeScore > 0 ? Math.round((shapeScore / maxShapeScore) * 100) : 0;
+            // 점수 DOM 업데이트
+            matchingScoreEl.textContent = `${Math.round(finalTotal)}점`; // 총점은 70+15+15
+            scoreBarEl.style.width = `${Math.min(100, Math.round(finalTotal))}%`; 
 
-            // 2. 최종 총점 100점 만점 환산
-            const totalScore = similarityScore + preferenceScore + shapeScore;
-            // 72 + 102 + 600 = 774점 만점
-            const maxTotalScore = maxSimilarityScore + maxPreferenceScore + maxShapeScore; 
-            const finalTotal = maxTotalScore > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0;
-
-            // 점수 DOM 업데이트 (100점 만점 점수로)
-            matchingScoreEl.textContent = `${finalTotal}점`;
-            similarityScoreEl.textContent = `${finalSimilarity}점`;
-            preferenceScoreEl.textContent = `${finalPreference}점`;
-            shapeScoreEl.textContent = `${finalShapeScore}점`;
-            
-            // 프로그레스 바는 최종 환산 점수(finalTotal) 사용
-            setTimeout(() => { scoreBarEl.style.width = `${finalTotal}%`; }, 100);
+            // (수정) 100점 만점 환산 점수로 표시
+            shapeScoreEl.textContent = `${displayShapeScore}점`;
+            similarityScoreEl.textContent = `${displaySimilarityScore}점`;
+            preferenceScoreEl.textContent = `${displayPreferenceScore}점`;
 
             // 차트 영역 다시 그리기
             scoreBreakdownEl.innerHTML = `
@@ -1129,17 +1147,12 @@
                         <canvas id="femaleRadarChart"></canvas>
                     </div>
                 </div>
-                 <div class="mt-8 pt-4 border-t">
-                    <p class="text-xs text-center text-gray-500 mb-2">성향 분포 ${Math.round(shapeSimilarity * 100)}% 유사</p>
-                 </div>
             `;
             
             // 새 차트 생성
             maleRadarChart = createRadarChart('maleRadarChart', '남자', maleGroupCounts, '#3B82F6');
             femaleRadarChart = createRadarChart('femaleRadarChart', '여자', femaleGroupCounts, '#EC4899');
             comparisonRadarChart = createComparisonRadarChart('comparisonRadarChart', maleGroupCounts, femaleGroupCounts);
-            
-            // 'TOP 3' 관련 로직 (groupSimilarityScores, top3HTML) 모두 제거됨
 
             // 프로필 생성
             const dominantMaleGroupKey = Object.keys(maleGroupCounts).length > 0 ? Object.keys(maleGroupCounts).reduce((a, b) => maleGroupCounts[a] > maleGroupCounts[b] ? a : b) : 'ADAPTIVE_BALANCED';
@@ -1158,13 +1171,15 @@
             resultGroupDescriptionFemaleEl.textContent = femaleProfileData.description;
             femaleTagsEl.innerHTML = Object.entries(femaleTags).sort((a, b) => b[1] - a[1]).map(([tag, count]) => `<span class="result-tag font-medium py-1 px-3 rounded-full text-sm">${tag}${count > 1 ? ` x${count}` : ''}</span>`).join('');
 
-            // 관계 조언 수정 (100점 만점 기준 및 '결 모양 점수' 강조)
-            if (finalTotal > 80) {
-                relationshipAdviceEl.textContent = `총점 ${finalTotal}점! (최고!) 두 분은 서로의 '결'을 깊이 이해하고 있습니다. 특히 '결' 모양 점수(${finalShapeScore}점)가 높다는 것은 두 분의 핵심 성향이 매우 비슷하다는 의미입니다!`;
-            } else if (finalTotal > 60) {
-                 relationshipAdviceEl.textContent = `좋은 점수(${finalTotal}점)입니다! '유사성'과 '선호성'이 조금 낮더라도, '결' 모양 점수(${finalShapeScore}점)가 높다면, 두 분은 근본적으로 잘 맞는 성향입니다.`;
+            // 관계 조언 수정 (100점 만점 기준)
+            if (finalTotal > 85) {
+                relationshipAdviceEl.textContent = `총점 ${Math.round(finalTotal)}점! (최고!) '결' 모양 기본 점수(${Math.round(finalShapeScore)}점)가 매우 높고, 보너스 점수까지 훌륭합니다. 두 분은 핵심 성향이 매우 비슷하고 서로를 잘 이해하는 천생연분입니다!`;
+            } else if (finalTotal > 65) {
+                 relationshipAdviceEl.textContent = `좋은 점수(${Math.round(finalTotal)}점)입니다! 두 분의 '결' 모양 기본 점수(${Math.round(finalShapeScore)}점)가 높아 근본적으로 잘 맞는 성향입니다. '유사성'(${displaySimilarityScore}점)과 '선호성'(${displayPreferenceScore}점) 점수를 확인하며 서로를 더 알아가보세요.`;
+            } else if (finalTotal > 45) {
+                 relationshipAdviceEl.textContent = `괜찮은 점수(${Math.round(finalTotal)}점)입니다. '결' 모양 점수(${Math.round(finalShapeScore)}점)가 조금 낮더라도, '선호성' 점수(${displayPreferenceScore}점)가 높다면 서로의 다름을 존중하고 맞춰가고 있다는 의미입니다.`;
             } else {
-                 relationshipAdviceEl.textContent = `두 분은 서로 다른 '결'을 가졌습니다 (총점 ${finalTotal}점). 하지만 '선호성 점수'(${finalPreference}점)가 높다면, 서로의 다름을 존중하고 원하는 방향으로 맞춰주고 있다는 의미입니다. 다름은 성장의 기회가 될 수 있습니다.`;
+                relationshipAdviceEl.textContent = `두 분은 서로 다른 '결'을 가졌습니다 (총점 ${Math.round(finalTotal)}점). 하지만 이것은 성장의 기회가 될 수 있습니다. 서로의 '결'을 존중하고 '선호성' 점수(${displayPreferenceScore}점)를 올리기 위해 노력해보세요!`;
             }
 
             if (dominantMaleGroupKey === dominantFemaleGroupKey) {
