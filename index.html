@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서로의 '결' 알아보기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto+Sans+KR', sans-serif; }
+        /* 기본 카드 스타일 및 호버 효과 */
+        .question-card { 
+            transition: all 0.3s ease-in-out; 
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            position: relative; /* 뱃지 위치를 위해 추가 */
+            padding-top: 3rem; /* 뱃지 공간 확보 */
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 1rem;
+        }
+        .question-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+        }
+        /* 질문 유형 뱃지 (위치 수정) */
+        .question-type-badge {
+            position: absolute;
+            top: 0.75rem; /* 카드 상단에서 살짝 내림 */
+            right: 0.75rem; /* 왼쪽 대신 오른쪽에 위치 */
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500; /* medium */
+            border-radius: 0.5rem 0 0.5rem 0; /* 테두리 모양 변경 (top-left, bottom-right) */
+            border: 1px solid;
+            background-clip: padding-box; /* 배경이 테두리 안쪽으로만 보이게 */
+        }
+
+        /* 동적 질문을 위한 스타일 */
+        .dynamic-followup { 
+            background-color: #fdfbf5; /* 연한 노란색 배경 */
+            border-top: 2px dashed #fcd34d; /* 노란색 점선 */
+            margin-top: 1rem; 
+            padding: 1rem; 
+            border-radius: 0 0 0.5rem 0.5rem; /* 하단만 둥글게 */
+        }
+        /* 결과 태그 */
+        .result-tag { 
+            background-color: #f0f0f0; 
+            color: #374151; 
+        }
+        /* 질문 그룹 헤더 */
+        .brain-type-header { 
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 0.5rem; /* mb-2 */
+            padding-bottom: 0.5rem; /* pb-2 */
+        }
+        .male-header { 
+            border-bottom: 2px solid #93c5fd; /* border-blue-300 */
+            color: #1e40af; /* text-blue-800 */
+        }
+        .female-header { 
+            border-bottom: 2px solid #f9a8d4; /* border-pink-300 */
+            color: #9d174d; /* text-pink-800 */
+        }
+        /* details/summary 태그 기본 스타일 제거 */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* 결과 페이드인 애니메이션 */
+        .fade-in { 
+            animation: fadeIn 1s ease-in-out forwards; 
+            opacity: 0; /* 기본값을 0으로 설정 */
+        }
+        .fade-in-delay-1 { animation-delay: 0.2s; }
+        .fade-in-delay-2 { animation-delay: 0.4s; }
+        .fade-in-delay-3 { animation-delay: 0.6s; }
+        .fade-in-delay-4 { animation-delay: 0.8s; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 라디오 버튼 선택 시 라벨 스타일 */
+        input[type="radio"]:checked + label {
+            border-color: #6366f1; /* indigo-500 */
+            background-color: #eef2ff; /* indigo-50 */
+            font-weight: 500;
+        }
+        
+        /* 라디오 버튼 자체는 숨김 */
+        input[type="radio"] {
+            display: none;
+        }
+        
+        /* 라벨을 클릭 가능하게 */
+        label.option-label {
+            display: block;
+            border: 2px solid #e5e7eb; /* gray-200 */
+            padding: 0.75rem; /* p-3 */
+            border-radius: 0.5rem; /* rounded-lg */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        label.option-label:hover {
+            background-color: #f9fafb; /* gray-50 */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="main-container" class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">서로의 '결' 알아보기</h1>
+            <p class="mt-2 text-gray-600">질문에 답하고 두 분의 고유한 '결'과 매칭률을 확인해보세요.</p>
+        </header>
+
+        <!-- 점수 계산 방식 안내 (수정됨) -->
+        <div class="mb-8 max-w-4xl mx-auto bg-indigo-50 p-4 rounded-lg text-sm text-gray-700 border border-indigo-200">
+            <details>
+                <summary class="font-semibold text-center text-indigo-800 mb-2 cursor-pointer">💡 점수 계산 방식 안내 (클릭하여 확인)</summary>
+                <div class="mt-2 space-y-3">
+                    <p class="font-semibold">질문 유형은 3가지입니다 (유사성 / 선호성 교차 / 선호성 다이나믹)</p>
+                    <div>
+                        <p class="font-semibold">💖 최종 매칭률 (총점):</p>
+                        <p>- 아래의 '유사성 점수'와 '선호성 점수'를 합산하여 계산합니다.</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">🤝 유사성 점수 (수정됨):</p>
+                        <p>- '유사성' 질문에서 두 분의 답변이 <strong>완전히 일치</strong>할 때 점수를 얻습니다.<br>
+                           - '선호성(동적)' 질문에서 두 분의 <strong>기본 성향이 일치</strong>하고(2점), 나아가 <strong>성향의 심도(정도)</strong>가 가까울수록 추가 점수(최대 2점)를 얻습니다.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">🎯 선호성 점수 (수정됨):</p>
+                        <p>- '선호성(교차)' 유형의 질문에서만 계산됩니다.<br>
+                           - <strong>[내가 선호하는 파트너의 모습]</strong>과 <strong>[파트너의 실제 모습]</strong>이 일치할 때 점수를 얻습니다. (양측 모두 계산)</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">👤 개인 '결'별 수치:</p>
+                        <p>- 각 '결'의 <strong>개인 수치</strong>는 '유사성' 및 '선호성' 질문에서 <strong>'나의 모습'</strong>으로 답한 항목들의 성향 그룹 횟수입니다.</p>
+                    </div>
+                    <p class="font-semibold mt-2">※ 6가지 성향 그룹 (결)</p>
+                     <div id="group-descriptions" class="space-y-3 text-xs"></div>
+                </div>
+            </details>
+        </div>
+
+        <!-- 질문 섹션 -->
+        <div id="question-section">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 남자 질문 -->
+                <div class="bg-blue-50 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-blue-800">🤵‍♂️ 남자</h2>
+                    <div id="male-questions" class="space-y-6"></div>
+                </div>
+                <!-- 여자 질문 -->
+                <div class="bg-pink-50 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-center mb-6 text-pink-800">👰‍♀️ 여자</h2>
+                    <div id="female-questions" class="space-y-6"></div>
+                </div>
+            </div>
+            <!-- 버튼 섹션 -->
+            <div class="text-center mt-8">
+                <div id="warning-message" class="mb-4 text-center text-red-500 font-semibold hidden">
+                    모든 질문에 답변해주세요! (동적 질문 포함)
+                </div>
+                <button id="random-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg mr-4">
+                    랜덤으로 답변하기
+                </button>
+                <button id="calculate-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg">
+                    결과 확인하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 결과 섹션 -->
+        <div id="results" class="hidden mt-8 md:mt-12 bg-white p-8 rounded-2xl shadow-2xl text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 opacity-0 fade-in">최종 결과</h2>
+            
+            <!-- 최종 매칭률 -->
+            <div class="my-8 opacity-0 fade-in fade-in-delay-1">
+                <p class="text-lg text-gray-600">두 분의 가치관 매칭률은...</p>
+                <p id="matching-score" class="text-6xl font-extrabold text-indigo-500 my-4">0%</p>
+                <div class="w-full bg-gray-200 rounded-full h-4 max-w-lg mx-auto overflow-hidden">
+                    <div id="score-bar" class="bg-indigo-500 h-4 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                </div>
+                
+                <!-- 분리된 점수 표시 -->
+                <div class="flex justify-center gap-8 mt-6 max-w-lg mx-auto">
+                    <div class="flex-1 text-center p-4 bg-blue-50 rounded-lg">
+                        <p class="font-semibold text-gray-700">🤝 유사성 점수</p>
+                        <p id="similarity-score" class="text-2xl font-bold text-blue-600">0%</p>
+                    </div>
+                    <div class="flex-1 text-center p-4 bg-pink-50 rounded-lg">
+                        <p class="font-semibold text-gray-700">🎯 선호성 점수</p>
+                        <p id="preference-score" class="text-2xl font-bold text-pink-600">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- '결'별 상세 분석 (방사형 그래프) -->
+            <div class="mt-8 pt-6 border-t opacity-0 fade-in fade-in-delay-2">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">📈 '결'별 상세 분석</h3>
+                <p class="text-gray-600 text-sm mb-4">(※ '나의 모습'으로 답한 성향의 분포입니다)</p>
+                <div id="score-breakdown" class="max-w-4xl mx-auto text-left space-y-4"></div>
+            </div>
+
+            <!-- 종합 '결' -->
+            <div class="mt-8 pt-6 border-t opacity-0 fade-in fade-in-delay-3">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">✨ 우리의 종합 '결'</h3>
+                <div id="combined-gradient" class="w-full h-32 md:h-40 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-inner">
+                     <p id="gradient-text" class="text-white text-3xl font-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Our Vibe</p>
+                </div>
+            </div>
+
+            <!-- 개인별 '결' 분석 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 opacity-0 fade-in fade-in-delay-4">
+                <!-- 남자 결과 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border">
+                    <p class="text-gray-600 font-semibold">🤵‍♂️ 남자의 '결'은...</p>
+                    <div id="result-visual-male" class="mt-4 p-6 rounded-lg transition-all duration-500">
+                        <h3 id="result-profile-text-male" class="text-2xl font-extrabold text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></h3>
+                    </div>
+                    <div class="mt-4 text-left">
+                        <p id="result-group-name-male" class="font-bold text-lg text-gray-800"></p>
+                        <p id="result-group-description-male" class="text-gray-600 mt-1 text-sm"></p>
+                    </div>
+                </div>
+                <!-- 여자 결과 -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border">
+                    <p class="text-gray-600 font-semibold">👰‍♀️ 여자의 '결'은...</p>
+                    <div id="result-visual-female" class="mt-4 p-6 rounded-lg transition-all duration-500">
+                        <h3 id="result-profile-text-female" class="text-2xl font-extrabold text-white" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4);"></h3>
+                    </div>
+                    <div class="mt-4 text-left">
+                        <p id="result-group-name-female" class="font-bold text-lg text-gray-800"></p>
+                        <p id="result-group-description-female" class="text-gray-600 mt-1 text-sm"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 관계 조언 -->
+            <div class="mt-8 pt-6 border-t opacity-0 fade-in fade-in-delay-4">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">💌 두 분의 관계 조언</h3>
+                <p id="relationship-advice" class="text-gray-700 bg-gray-100 p-4 rounded-lg"></p>
+            </div>
+
+            <!-- 상세 성향 태그 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 pt-6 border-t opacity-0 fade-in fade-in-delay-4">
+                 <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">남자의 상세 성향 태그</h3>
+                    <div id="male-tags" class="flex flex-wrap gap-2 justify-center"></div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">여자의 상세 성향 태그</h3>
+                    <div id="female-tags" class="flex flex-wrap gap-2 justify-center"></div>
+                </div>
+            </div>
+
+            <!-- 다시하기 버튼 -->
+            <div class="mt-12 opacity-0 fade-in fade-in-delay-4">
+                 <button id="retry-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-8 rounded-full text-lg">
+                    다시하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. 데이터 구조 정의 ---
+        
+        // --- '동적' 질문을 위한 심도(Degree) 질문 템플릿 ---
+        // '동적' 유형의 질문에 대한 심도 질문을 생성합니다.
+        const F_DEGREE = (text, options) => ({
+            text: text,
+            options: options.map((opt, index) => ({ value: (index + 1).toString(), text: opt })) // value를 1, 2, 3...으로 자동 할당
+        });
+
+        // 원본 18개 질문 + 유형 재정의 + 심도 질문 추가
+        const questions = [
+            // --- Action (나의 행동 유형) ---
+            {
+                id: 'q1',
+                type: 'similarity', // 질문 유형
+                brainType: 'Action (나의 행동 유형)',
+                text: '인스타그램 스토리에 사진을 올린다면 어떤 사진을 선택하시겠어요?',
+                options: [
+                     { value: '1', text: '아름다운 자연경관에서 찍은 내 사진 (경험중시형)', tag: '#경험중시형'},
+                     { value: '2', text: '미슐랭 5스타 고급 레스토랑의 음식 사진 (성취지향형)', tag: '#성취지향형'},
+                     { value: '3', text: '친구들과 함께 파티를 즐기는 역동적인 사진 (사교형)', tag: '#사교형'},
+                     { value: '4_1', text: '인스타그램 스토리는 잘 올리지 않는 편 (안정지향형)', tag: '#안정지향형'}
+                 ]
+            },
+            {
+                id: 'q2',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Action (나의 행동 유형)',
+                text: '선호하는 운동 스타일은 무엇인가요?',
+                options: [
+                     { 
+                        value: 'solo', text: '혼자 집중하며 즐기는 운동 (러닝, 헬스 등)', tag: '#자기계발형',
+                        followup: F_DEGREE('얼마나 자주 혼자 운동하는 것을 선호하시나요?', [
+                            '거의 모든 운동을 혼자 하는 것이 좋음 (심도 3)',
+                            '대부분 혼자 하지만 가끔은 같이 하는 것도 좋음 (심도 2)',
+                            '혼자 하는 것을 선호하지만, 같이 하는 것도 비슷하게 좋음 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '1v1', text: '파트너와 1:1로 하는 운동 (테니스, 배드민턴 등)', tag: '#활동적인',
+                        followup: F_DEGREE('파트너와의 운동을 얼마나 중요하게 생각하시나요?', [
+                            '운동은 무조건 파트너와 함께해야 함 (심도 3)',
+                            '파트너와 하는 것을 가장 선호하지만, 혼자도 함 (심도 2)',
+                            '파트너와 하는 것을 선호하지만, 그룹으로도 자주 함 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: 'group', text: '여럿이 함께하는 팀 운동 (축구, 농구 등)', tag: '#사교형',
+                        followup: F_DEGREE('팀 운동의 어떤 점을 가장 중요하게 생각하시나요?', [
+                            '승리를 위한 협동과 경쟁 (심도 3)',
+                            '운동 후 함께하는 뒤풀이와 사교 활동 (심도 2)',
+                            '다양한 사람들과 어울리며 즐기는 것 자체 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: 'none', text: '운동은 별로 즐기지 않음 (정적인)', tag: '#정적인',
+                        followup: F_DEGREE('운동을 즐기지 않는 정도는?', [
+                            '숨쉬기 외의 모든 격한 움직임을 싫어함 (심도 3)',
+                            '건강을 위해 억지로 하는 편, 즐기진 않음 (심도 2)',
+                            '가벼운 산책 정도는 가끔 즐김 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q22',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Action (나의 행동 유형)',
+                text: '당신의 이상적인 주말은 어떤 모습에 가까운가요?',
+                options: [
+                     { 
+                        value: 'home', text: '집에서 편안하게 휴식을 취하며 재충전 (집순이/집돌이)', tag: '#집순이/집돌이',
+                        followup: F_DEGREE('집에서 주로 무엇을 하며 재충전하시나요?', [
+                            '아무것도 하지 않고 온전히 \'쉼\' (예: 잠, 멍때리기) (심도 3)', // 오류 수정됨 (따옴표 이스케이프 제거)
+                            '편안한 상태로 좋아하는 콘텐츠 소비 (예: 넷플릭스, 유튜브) (심도 2)',
+                            '집에서 하는 생산적인 활동 (예: 요리, 청소, 독서) (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: 'develop', text: '새로운 것을 배우거나 취미 활동에 몰두 (자기계발형)', tag: '#자기계발형',
+                        followup: F_DEGREE('자기계발/취미 활동의 주된 목적은 무엇인가요?', [
+                            '커리어/수익 향상을 위한 전문성 강화 (심도 3)',
+                            '새로운 기술을 배우는 것 자체의 즐거움 (심도 2)',
+                            '스트레스 해소 및 기분 전환 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: 'social', text: '친구들을 만나거나 새로운 사람들과 어울림 (사교형)', tag: '#사교형',
+                        followup: F_DEGREE('사람들과 어울릴 때 어떤 스타일을 선호하시나요?', [
+                            '다수의 새로운 사람들과 만나는 대규모 모임 (심도 3)',
+                            '익숙하고 친한 친구들과의 소규모 모임 (심도 2)',
+                            '1:1 혹은 1:2의 깊은 대화를 나누는 만남 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: 'travel', text: '가까운 곳으로 여행을 떠나 새로운 경험 (모험추구형)', tag: '#모험추구형',
+                        followup: F_DEGREE('여행을 떠나는 주된 이유는 무엇인가요?', [
+                            '완전히 낯선 곳에서의 새로운 도전과 경험 (심도 3)',
+                            '익숙한 일상에서의 완벽한 탈출 (심도 2)',
+                            '아름다운 풍경과 맛있는 음식 (힐링) (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            // --- Emotion (나의 감정 및 관계 유형) ---
+            {
+                id: 'q4',
+                type: 'similarity', // 질문 유형
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '꿈꾸는 프러포즈는 어떤 모습인가요?',
+                options: [
+                     { value: '1', text: '분위기 좋은 레스토랑에서의 로맨틱한 프러포즈 (낭만주의형)', tag: '#낭만주의형'},
+                     { value: '2', text: '많은 사람들 앞에서의 깜짝 프러포즈 (이벤트선호)', tag: '#이벤트선호'},
+                     { value: '3', text: '둘만의 추억이 담긴 장소에서의 진솔한 프러포즈 (관계중심형)', tag: '#관계중심형'},
+                     { value: '4', text: '화려함보다 진심이 담긴 반지와 편지 (실용주의형)', tag: '#실용주의형'}
+                 ]
+            },
+            {
+                id: 'q5',
+                type: 'similarity', // 질문 유형
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '연인이 했을 때 가장 설레는 행동(사랑의 언어)은 무엇인가요?',
+                options: [
+                     { value: '1', text: '내가 했던 말을 기억하고 세심하게 챙겨줄 때 (세심함중시)', tag: '#세심함중시'},
+                     { value: '2', text: '힘든 하루 끝에 말없이 꼭 안아줄 때 (스킨십중시)', tag: '#스킨십중시'},
+                     { value: '3', text: '나의 일이나 성과를 진심으로 응원하고 지지해줄 때 (정서적지지)', tag: '#정서적지지'},
+                     { value: '4', text: '함께 시간을 보낼 때 나에게 온전히 집중해줄 때 (시간공유형)', tag: '#시간공유형'}
+                 ]
+            },
+            {
+                id: 'q23',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '공공장소에서의 애정표현(스킨십)에 대해 당신은 어떻게 생각하시나요?',
+                options: [
+                     { 
+                        value: '1', text: '손 잡는 것 정도는 괜찮지만, 그 이상은 조심스러움 (보수적가치관)', tag: '#보수적가치관',
+                        followup: F_DEGREE('어느 정도 조심스러운 편인가요?', [
+                            '연인 사이라도 공공장소에선 손잡기도 조심스러움 (심도 3)',
+                            '손잡는 것은 OK, 가벼운 포옹/어깨동무는 상황 봐서 (심도 2)',
+                            '손잡기, 팔짱, 어깨동무까지는 자연스럽게 OK (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '주변에 피해만 주지 않는다면 자유롭게 표현 가능 (자유로운표현)', tag: '#자유로운표현',
+                        followup: F_DEGREE('어느 정도로 자유롭게 표현하시나요?', [
+                            '주변 시선은 전혀 신경 쓰지 않고 애정 표현 (심도 3)',
+                            '키스까지도 가능하지만, 상황과 분위기는 고려함 (심도 2)',
+                            '가벼운 뽀뽀나 깊은 포옹 정도는 OK (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '애정표현은 둘만 있는 사적인 공간에서 하는 것이 좋음 (사생활중시)', tag: '#사생활중시',
+                        followup: F_DEGREE('어느 정도로 사적인 공간을 선호하시나요?', [
+                            '공공장소에서는 연인인 티를 내는 것조차 불편함 (심도 3)',
+                            '손잡는 것 외의 모든 스킨십은 사적인 공간에서만 (심도 2)',
+                            '대부분 사적인 공간을 선호하지만, 손잡기/팔짱은 OK (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '장소와 분위기에 따라 유연하게 달라질 수 있음 (상황적응형)', tag: '#상황적응형',
+                        followup: F_DEGREE('상황에 따라 유연하다는 것은 어떤 의미인가요?', [
+                            '사람이 많고 엄숙한 곳(예: 대중교통)에선 자제, 한적한 곳(예: 공원)에선 자유롭게 (심도 2)', // 유연함은 2단계로 통일
+                            'TPO(시간, 장소, 상황)를 철저히 고려하여 조절함 (심도 2)',
+                            '내키는 대로 하지만, 타인의 불쾌한 시선이 느껴지면 자제함 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q26',
+                type: 'similarity', // 질문 유형
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '비 오는 날, 퇴근 시간에 맞춰 연인이 회사 앞에 우산을 들고 나타났습니다. 당신의 반응은?',
+                options: [
+                     { value: '1', text: '우와, 어떻게 알고 왔어? 와줘서 정말 고마워! (감정표현형)', tag: '#감정표현형'},
+                     { value: '2', text: '괜찮은데 왜 고생스럽게 왔어~ 걱정되잖아 (배려형)', tag: '#배려형'},
+                     { value: '3', text: '마침 보고 싶었는데, 이렇게 깜짝으로 보니 더 좋다! (낭만주의형)', tag: '#낭만주의형'},
+                     { value: '4', text: '잘 왔다! 이왕 만났으니 맛있는 거 먹으러 갈까? (실용주의형)', tag: '#실용주의형'}
+                 ]
+            },
+            {
+                id: 'q17',
+                type: 'similarity', // 질문 유형
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '내 연인이 내 친구의 깻잎을 떼주는 것을 보았습니다. 당신의 생각은?',
+                options: [
+                     { value: '1', text: '아무렇지 않음. 그럴 수 있음 (쿨한연애)', tag: '#쿨한연애'},
+                     { value: '2', text: '기분은 좀 그렇지만 티 내지 않음 (감정조절형)', tag: '#감정조절형'},
+                     { value: '3', text: '연인에게 장난스럽게 서운함을 표현함 (관계중심형)', tag: '#관계중심형'},
+                     { value: '4', text: '절대 안됨. 그 자리에서 이야기함 (원칙주의형)', tag: '#원칙주의형'}
+                 ]
+            },
+            {
+                id: 'q18',
+                type: 'similarity', // 질문 유형
+                brainType: 'Emotion (나의 감정 및 관계 유형)',
+                text: '선호하는 반려동물이 있나요?',
+                options: [
+                     { value: '1', text: '활동적이고 애교 많은 강아지가 좋음 (활동적인)', tag: '#활동적인'},
+                     { value: '2', text: '독립적이고 차분한 고양이가 좋음 (차분한)', tag: '#차분한'},
+                     { value: '3', text: '둘 다 좋지만, 키울 자신은 없음 (현실주의형)', tag: '#현실주의형'},
+                     { value: '4', text: '반려동물을 키우는 것은 선호하지 않음 (개인주의형)', tag: '#개인주의형'}
+                 ]
+            },
+            // --- Thinking (나의 가치관 및 생각 유형) ---
+            {
+                id: 'q11',
+                type: 'similarity', // 질문 유형
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '성공한 친구가 확실한 투자처라며 주식 정보를 주었습니다. 어떻게 하시겠어요?',
+                options: [
+                     { value: '1', text: '친구를 믿고 \'영끌\' 대출을 해서 투자 (과감한투자)', tag: '#과감한투자'},
+                     { value: '2', text: '현재 보유한 현금 전부를 투자 (공격적투자)', tag: '#공격적투자'},
+                     { value: '3', text: '여유 자금의 절반 정도만 신중하게 투자 (안정적투자)', tag: '#안정적투자'},
+                     { value: '4', text: '스스로 분석 없이는 투자하지 않음 (원칙주의형)', tag: '#원칙주의형'}
+                 ]
+            },
+            {
+                id: 'q19',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '연인과 갈등이 생겼을 때, 당신은 어떻게 해결하나요?',
+                options: [
+                     { 
+                        value: '1', text: '감정이 가라앉을 때까지 기다렸다가 차분히 대화 (논리적대화)', tag: '#논리적대화',
+                        followup: F_DEGREE('갈등 상황에서 당신에게 더 중요한 것은?', [
+                            '이성적으로 옳고 그름을 명확히 파악하는 것 (심도 3)',
+                            '감정 소모 없이 효율적으로 해결책을 찾는 것 (심도 2)',
+                            '논리도 중요하지만, 상대방의 감정을 다독이는 것 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '갈등이 길어지는게 싫어 빨리 사과하고 넘어감 (갈등회피형)', tag: '#갈등회피형',
+                        followup: F_DEGREE('빨리 사과하는 주된 이유는 무엇인가요?', [
+                            '갈등 상황 자체가 주는 스트레스가 너무 싫어서 (심도 3)',
+                            '내 잘못이 아니어도, 관계를 위해 일단 숙이고 봄 (심도 2)',
+                            '사소한 문제는 빨리 털고 넘어가는 게 효율적이어서 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '감정을 솔직하게 모두 표현해야 직성이 풀림 (감정표현형)', tag: '#감정표현형',
+                        followup: F_DEGREE('감정을 표현하는 정도는?', [
+                            '서운한 감정을 숨기지 않고 그 자리에서 모두 말함 (심도 3)',
+                            '감정이 격해질 순 있지만, 선은 넘지 않으려 노력함 (심도 2)',
+                            '감정을 표현하되, 상대방의 기분도 살피며 조절함 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '함께 문제를 분석하고 해결책을 찾으려 노력함 (문제해결형)', tag: '#문제해결형',
+                        followup: F_DEGREE('문제 해결 시 가장 중점을 두는 부분은?', [
+                            '재발 방지를 위한 근본적인 원인 분석과 시스템 마련 (심도 3)',
+                            '양측이 모두 만족할 수 있는 합리적인 대안 제시 (심도 2)',
+                            '문제를 빠르게 파악하고 실용적인 해결책을 찾는 것 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q27',
+                type: 'similarity', // 질문 유형
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '배우자가 청소기를 돌렸는데 구석에 먼지가 그대로 있습니다. 당신의 반응은?',
+                 options: [
+                     { value: '1', text: '우와, 청소해줬네! 정말 고마워~ (긍정적강화)', tag: '#긍정적강화'},
+                     { value: '2', text: '고마워! 다음엔 이쪽 구석도 한번 더 신경 써주면 완벽할 것 같아! (피드백제공)', tag: '#피드백제공'},
+                     { value: '3', text: '말없이 내가 직접 나머지 먼지를 청소함 (갈등회피형)', tag: '#갈등회피형'},
+                     { value: '4', text: '그 정도는 괜찮음. 신경 쓰지 않음 (자유로운)', tag: '#자유로운'}
+                 ]
+            },
+            {
+                id: 'q24',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '결혼 후 양가 부모님 댁 방문 빈도는 어느 정도가 적당하다고 생각하시나요?',
+                options: [
+                     { 
+                        value: '1', text: '명절이나 생신 등 특별한 날에만 방문 (독립성중시)', tag: '#독립성중시',
+                        followup: F_DEGREE('부모님과의 관계에서 가장 중요한 것은?', [
+                            '각자의 삶을 존중하며, 경제적/정서적으로 완전한 독립 (심도 3)',
+                            '독립을 유지하되, 도리는 다함 (예: 정기적 용돈) (심도 2)',
+                            '특별한 날 챙기는 것만으로도 충분함 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '한두 달에 한 번 정도는 정기적으로 방문 (가족중심형)', tag: '#가족중심형',
+                        followup: F_DEGREE('정기적인 방문의 주된 목적은 무엇인가요?', [
+                            '가족으로서의 유대감을 확인하고 안부를 살피는 것 (심도 2)', // 2단계로 통일
+                            '부모님께 받은 사랑에 보답하고 효도하는 것 (심도 2)',
+                            '자녀(손주)를 보여드리고 함께 시간을 보내는 것 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '정해진 것 없이, 필요하거나 원할 때 자유롭게 왕래 (자유추구형)', tag: '#자유추구형',
+                        followup: F_DEGREE('자유로운 왕래의 기준은 무엇인가요?', [
+                            '부모님 도움이 필요할 때(예: 육아)나 내가 원할 때 (심도 3)',
+                            '양가 부모님과 우리 부부의 스케줄이 모두 맞을 때 (심도 2)',
+                            '가까이 살면서, 식사 한 끼 하듯 편하게 오고 갈 때 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '가까이 살면서 자주 왕래하며 가깝게 지냄 (관계중심형)', tag: '#관계중심형',
+                        followup: F_DEGREE('부모님과 얼마나 가깝게 지내고 싶으신가요?', [
+                            '같은 아파트/동네에 살며 매일같이 교류함 (심도 3)',
+                            '적어도 주 1회 이상 함께 식사하거나 왕래함 (심도 2)',
+                            '물리적 거리는 가깝되, 방문은 정기적으로(예: 2주 1회) (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q25',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '가사(집안일) 분담에 대한 당신의 생각은?',
+                options: [
+                     { 
+                        value: '1', text: '각자 잘하는 일을 정해서 명확하게 역할을 나눔 (효율중시형)', tag: '#효율중시형',
+                        followup: F_DEGREE('역할 분담은 얼마나 명확해야 하나요?', [
+                            '요일별/영역별로 엑셀 시트를 만들 정도로 명확하게 (심도 3)',
+                            '요리/청소/빨래 등 큰 영역별로 담당자를 정함 (심도 2)',
+                            '잘하는 것을 우선하되, 상황에 따라 유연하게 변경 가능 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '정해놓지 않고, 시간이 되거나 먼저 보는 사람이 함 (자율형)', tag: '#자율형',
+                        followup: F_DEGREE('자율 분담이 가능하다고 믿는 근거는?', [
+                            '서로에 대한 신뢰, 알아서 공평하게 할 것이라 믿음 (심도 3)',
+                            '둘 다 깔끔한 편이라, 더러운 걸 못 참고 먼저 하게 됨 (심도 2)',
+                            '누가 더 했는지 따지지 않고, 고마워하는 마음이 중요 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '주말 등 특정 시간을 정해 함께 집중적으로 처리 (계획형)', tag: '#계획형',
+                        followup: F_DEGREE('함께 처리하는 방식의 장점은 무엇이라고 생각하나요?', [
+                            '가사노동도 함께하는 팀플레이라고 느낌 (심도 3)', // 오류 수정됨 (따옴표 이스케이프 제거)
+                            '정해진 시간에 끝내고, 남은 주말은 온전히 쉼 (심도 2)',
+                            '혼자 하면 힘들지만, 같이 하면 금방 끝낼 수 있음 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '가사도우미, 식기세척기 등 시스템을 적극 활용 (편리성추구)', tag: '#편리성추구',
+                        followup: F_DEGREE('시스템을 어느 정도까지 활용하고 싶으신가요?', [
+                            '돈으로 해결 가능한 모든 가사노동 (예: 도우미, 세탁/배달) (심도 3)',
+                            '필수 가전(3대 이모님)과 주 1회 도우미 정도 (심도 2)',
+                            '필수 가전(식세기, 건조기, 로봇청소기)만 있어도 충분 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q12',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '이상적인 자녀 수는 몇 명인가요?',
+                options: [
+                     { 
+                        value: '1', text: '딩크(DINK)족, 자녀 없이 둘만의 삶 (개인주의형)', tag: '#개인주의형',
+                        followup: F_DEGREE('딩크를 원하는 주된 이유는 무엇인가요?', [
+                            '자녀에게 드는 비용/시간/에너지를 오롯이 나에게 쓰고 싶음 (심도 3)',
+                            '두 사람의 자유롭고 여유로운 삶을 가장 중시함 (심도 2)',
+                            '육아에 대한 자신이 없거나, 현재의 삶에 만족함 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '한 명의 자녀에게 집중 (계획형)', tag: '#계획형',
+                        followup: F_DEGREE('한 명의 자녀를 원하는 주된 이유는?', [
+                            '자녀에게 모든 지원을 집중해 최고로 키우고 싶음 (심도 3)',
+                            '경제적/현실적 여건을 고려할 때 한 명이 최선 (심도 2)',
+                            '하나만 낳아 잘 기르는 것이 행복에 더 도움 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '안정적이고 화목한 두 명의 자녀 (가정중심형)', tag: '#가정중심형',
+                        followup: F_DEGREE('두 명의 자녀를 원하는 주된 이유는?', [
+                            '자녀가 형제/자매와 의지하며 자라는 것이 중요함 (심도 3)',
+                            '아들/딸 성별에 관계없이, 둘이 가장 이상적 (심도 2)',
+                            '외동은 외로울 것 같아서 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '다둥이 가정을 꿈꿈 (다자녀선호)', tag: '#다자녀선호',
+                        followup: F_DEGREE('다둥이 가정을 원하는 주된 이유는?', [
+                            '아이들이 주는 행복은 많을수록 좋다고 생각함 (심도 3)',
+                            '경제적 여유만 된다면 셋 이상 낳고 싶음 (심도 2)',
+                            '북적북적하고 화목한 대가족의 로망 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q13',
+                type: 'dynamic', // 질문 유형 (심도 질문으로 변경)
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '선호하는 부부의 경제 활동 형태는 무엇인가요?',
+                options: [
+                     { 
+                        value: '1', text: '각자의 커리어를 존중하는 맞벌이 (성장지향형)', tag: '#성장지향형',
+                        followup: F_DEGREE('맞벌이에 대해 어떻게 생각하시나요?', [
+                            '결혼/출산과 관계없이, 각자의 커리어는 평생 유지해야 함 (심도 3)',
+                            '경제적 안정을 위해 맞벌이는 선택이 아닌 필수 (심도 2)',
+                            '상황에 따라 쉴 순 있지만, 기본적으로 맞벌이를 지향 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '2', text: '상황에 따라 유연하게, 가능하면 맞벌이 (상황적응형)', tag: '#상황적응형',
+                        followup: F_DEGREE('상황에 따라 유연하다는 것은 어떤 의미인가요?', [
+                            '육아기 등 특정 시기에는 한 사람이 쉬는 것도 OK (심도 2)', // 2단계로 통일
+                            '소득/커리어보다 \'삶의 질\'이 더 중요하면 외벌이도 OK (심도 2)', // 오류 수정됨 (따옴표 이스케이프 제거)
+                            '딱히 정해두지 않고, 그때그때 상황에 맞게 결정 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '3', text: '한 사람은 경제활동, 한 사람은 가정을 돌보는 외벌이 (전통적가치관)', tag: '#전통적가치관',
+                        followup: F_DEGREE('외벌이를 선호하는 주된 이유는 무엇인가요?', [
+                            '한 사람이 가정(육아/내조)에 집중하는 것이 효율적 (심도 3)',
+                            '경제활동/가사 분담으로 인한 갈등을 피하고 싶음 (심도 2)',
+                            '한 사람의 소득만으로도 충분히 생활이 가능할 때 (심도 1)'
+                        ])
+                    },
+                     { 
+                        value: '4', text: '경제적 여유만 있다면, 자유롭게 살고 싶음 (자유추구형)', tag: '#자유추구형',
+                        followup: F_DEGREE('경제적 자유(파이어족)를 꿈꾸시나요?', [
+                            '조기 은퇴 후, 돈에 얽매이지 않는 삶이 최종 목표 (심도 3)',
+                            '일은 하되, 생계유지 목적이 아닌 자아실현을 위해 (심도 2)',
+                            '돈 걱정 없이 원하는 것을 마음껏 하고 싶음 (심도 1)'
+                        ])
+                    }
+                 ]
+            },
+            {
+                id: 'q15',
+                type: 'similarity', // 질문 유형
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '당신이 결혼을 원하는 가장 큰 이유는 무엇인가요?',
+                options: [
+                     { value: '1', text: '정서적 안정감과 평생의 동반자를 얻기 위해 (안정지향형)', tag: '#안정지향형'},
+                     { value: '2', text: '사랑하는 사람과 가정을 꾸리기 위해 (가정중심형)', tag: '#가정중심형'},
+                     { value: '3', text: '더 나은 미래를 함께 계획하고 성장하기 위해 (성장지향형)', tag: '#성장지향형'},
+                     { value: '4', text: '함께 다양한 경험을 하며 인생을 더 즐겁게 살기 위해 (모험추구형)', tag: '#모험추구형'}
+                 ]
+            },
+            {
+                id: 'q16',
+                type: 'similarity', // 질문 유형
+                brainType: 'Thinking (나의 가치관 및 생각 유형)',
+                text: '신혼집을 구한다면, 당신의 우선순위는 어디에 있나요?',
+                options: [
+                     { value: '1', text: '미래 가치를 보고 서울 중심지 아파트 선택 (미래가치중시)', tag: '#미래가치중시'},
+                     { value: '2', text: '현재의 안정을 위해 경기도 신축 아파트 선택 (현재안정중시)', tag: '#현재안정중시'},
+                     { value: '3', text: '직주근접이 가장 중요함 (실용주의형)', tag: '#실용주의형'},
+                     { value: '4G', text: '개인의 취향이 담긴 인테리어의 집을 원함 (심미주의형)', tag: '#심미주의형'}
+                 ]
+            }
+        ];
+        
+        // 태그 그룹 정의 (각 태그가 어떤 '결'에 속하는지)
+        const tagGroups = {
+            EMOTIONAL_CONNECT: { tags: ['#낭만주의형', '#관계중심형', '#세심함중시', '#스킨십중시', '#정서적지지', '#배려형', '#감정표현형', '#긍정적강화', '#가족중심형', '#다자녀선호', '#시간공유형'] },
+            PRACTICAL_RATIONAL: { tags: ['#실용주의형', '#원칙주의형', '#현실주의형', '#논리적대화', '#문제해결형', '#효율중시형', '#피드백제공', '#미래가치중시'] },
+            STABILITY_ORIENTED: { tags: ['#안정지향형', '#안정적투자', '#계획형', '#집순이/집돌이', '#보수적가치관', '#현재안정중시', '#전통적가치관', '#정적인'] },
+            ACTIVE_EXPERIENCE: { tags: ['#경험중시형', '#성취지향형', '#사교형', '#활동적인', '#모험추구형', '#이벤트선호', '#과감한투자', '#공격적투자', '#자기계발형', '#성장지향형'] },
+            AUTONOMY_FLEXIBILITY: { tags: ['#개인주의형', '#쿨한연애', '#자유로운표현', '#사생활중시', '#자유추구형', '#독립성중시', '#자율형', '#갈등회피형', '#자유로운'] },
+            ADAPTIVE_BALANCED: { tags: ['#상황적응형', '#감정조절형', '#편리성추구', '#심미주의형', '#차분한'] }
+        };
+
+
+        // '결' 프로필 정의 (결과 화면용)
+        const sensoryProfiles = {
+            EMOTIONAL_CONNECT: { name: "감성의 결", description: "사람들과의 따뜻한 유대와 감정적 교류에서 행복을 느끼는 사람입니다. 타인의 마음에 깊이 공감하며, 관계를 통해 안정감을 얻는 섬세한 '결'을 가졌습니다.", background: "bg-pink-400", colorCode: "#F9A8D4" },
+            PRACTICAL_RATIONAL: { name: "이성의 결", description: "명확한 논리와 효율성을 중요하게 생각하며, 문제 해결에 뛰어난 능력을 보입니다. 감정보다 이성적인 판단을 우선시하는 시원하고 투명한 '결'을 가졌습니다.", background: "bg-blue-500", colorCode: "#3B82F6" },
+            STABILITY_ORIENTED: { name: "안정의 결", description: "예측 가능하고 편안한 환경에서 가장 큰 안정감을 느낍니다. 꾸준함과 신뢰를 바탕으로 삶을 단단하게 가꾸어 나가는 차분하고 깊은 '결'을 가졌습니다.", background: "bg-green-500", colorCode: "#22C55E" },
+            ACTIVE_EXPERIENCE: { name: "활동의 결", description: "새로운 도전과 경험을 통해 삶의 에너지를 얻는 열정적인 사람입니다. 끊임없이 성장하고 세상을 탐험하고자 하는 반짝이는 '결'을 가졌습니다.", background: "bg-amber-500", colorCode: "#F59E0B" },
+            AUTONOMY_FLEXIBILITY: { name: "자유의 결", description: "자신만의 고유한 개성과 자유를 무엇보다 중요하게 생각합니다. 정해진 틀에 얽매이지 않고, 자신만의 속도와 방식으로 세상을 살아가는 신비로운 '결'을 가졌습니다.", background: "bg-purple-500", colorCode: "#8B5CF6" },
+            ADAPTIVE_BALANCED: { name: "조화의 결", description: "어떤 상황에서도 유연하게 대처하며, 갈등보다는 조화를 추구합니다. 치우치지 않는 균형감각으로 주변과 자연스럽게 어우러지는 맑고 깨끗한 '결'을 가졌습니다.", background: "bg-gray-500", colorCode: "#6B7280" }
+        };
+
+        // '결' 시각화 단어 정의
+        const sensoryWords = {
+            EMOTIONAL_CONNECT: { texture: ["따뜻한", "부드러운", "포근한"], color: ["핑크빛", "복숭아빛"], scent: ["꽃향기", "달콤한 과일향"], shape: ["솜사탕", "실크 스카프", "구름"] },
+            PRACTICAL_RATIONAL: { texture: ["시원한", "매끄러운", "단단한"], color: ["하늘색", "회색빛"], scent: ["비 냄새", "민트향"], shape: ["수정", "유리구슬", "얼음 조각"] },
+            STABILITY_ORIENTED: { texture: ["단단한", "차분한", "편안한"], color: ["연두색", "갈색빛"], scent: ["나무향", "젖은 흙냄새"], shape: ["조약돌", "나뭇잎", "이끼"] },
+            ACTIVE_EXPERIENCE: { texture: ["뜨거운", "톡톡 튀는", "짜릿한"], color: ["노란색", "주황색"], scent: ["상큼한 레몬향", "타오르는 장작 냄새"], shape: ["별", "불꽃", "보석 원석"] },
+            AUTONOMY_FLEXIBILITY: { texture: ["신비로운", "오묘한", "가벼운"], color: ["보랏빛", "남색"], scent: ["깊은 밤공기 냄새", "고요한 숲의 향"], shape: ["안개", "자수정", "깃털"] },
+            ADAPTIVE_BALANCED: { texture: ["깨끗한", "맑은", "투명한"], color: ["흰색", "투명한"], scent: ["무향(無香)", "맑은 공기 냄새"], shape: ["물방울", "이슬", "백자"] }
+        };
+
+        // --- 2. DOM 요소 정의 ---
+        const maleQuestionsContainer = document.getElementById('male-questions');
+        const femaleQuestionsContainer = document.getElementById('female-questions');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const randomBtn = document.getElementById('random-btn');
+        const resultsContainer = document.getElementById('results');
+        const warningMessage = document.getElementById('warning-message');
+        const questionSection = document.getElementById('question-section');
+        const retryBtn = document.getElementById('retry-btn');
+        const combinedGradientEl = document.getElementById('combined-gradient');
+        const groupDescriptionsEl = document.getElementById('group-descriptions');
+
+        const matchingScoreEl = document.getElementById('matching-score');
+        const scoreBarEl = document.getElementById('score-bar');
+        const similarityScoreEl = document.getElementById('similarity-score');
+        const preferenceScoreEl = document.getElementById('preference-score');
+        const scoreBreakdownEl = document.getElementById('score-breakdown');
+
+        const resultVisualMaleEl = document.getElementById('result-visual-male');
+        const resultProfileTextMaleEl = document.getElementById('result-profile-text-male');
+        const resultGroupNameMaleEl = document.getElementById('result-group-name-male');
+        const resultGroupDescriptionMaleEl = document.getElementById('result-group-description-male');
+        const maleTagsEl = document.getElementById('male-tags');
+
+        const resultVisualFemaleEl = document.getElementById('result-visual-female');
+        const resultProfileTextFemaleEl = document.getElementById('result-profile-text-female');
+        const resultGroupNameFemaleEl = document.getElementById('result-group-name-female');
+        const resultGroupDescriptionFemaleEl = document.getElementById('result-group-description-female');
+        const femaleTagsEl = document.getElementById('female-tags');
+        
+        const relationshipAdviceEl = document.getElementById('relationship-advice');
+
+        let maleRadarChart = null;
+        let femaleRadarChart = null;
+        let comparisonRadarChart = null;
+        let totalExpectedAnswers = 0; // 답변해야 할 총 라디오 그룹 수
+
+        // --- 3. 핵심 유틸 함수 ---
+        function findTagGroupKey(tag) {
+            if (!tag) return null; // tag가 undefined나 null일 경우
+            for (const key in tagGroups) {
+                if (tagGroups[key].tags.includes(tag)) { return key; }
+            }
+            return null;
+        }
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+        
+        // --- 4. 질문 렌더링 로직 (수정됨) ---
+        
+        /** 동적 질문 생성 함수 (수정됨: 라디오 버튼을 직접 인자로 받음) */
+        function handleDynamic(radio) {
+            const followupDataStr = radio.dataset.followup;
+
+            // data-followup이 없거나 "null" 문자열이면 실행 안함
+            if (!followupDataStr || followupDataStr === 'null') {
+                // 이 옵션에는 동적 질문이 없으므로, 기존 동적 질문이 있다면 제거
+                const questionCard = radio.closest('.question-card');
+                const existingFollowup = questionCard.querySelector('.dynamic-followup');
+                if (existingFollowup) {
+                    existingFollowup.remove();
+                }
+                return;
+            }
+            
+            // URL 디코딩이 더 이상 필요 없음, JSON 파싱만 수행
+            const followupData = JSON.parse(followupDataStr);
+            const questionCard = radio.closest('.question-card');
+            
+            // name에서 qId와 gender 추출 (예: "q2-me-male")
+            const nameParts = radio.name.split('-'); // ["q2", "me", "male"]
+            const qId = nameParts[0];
+            const gender = nameParts[nameParts.length - 1]; // "male" or "female"
+            
+            // 기존의 동적 질문 컨테이너 제거
+            const existingFollowup = questionCard.querySelector('.dynamic-followup');
+            if (existingFollowup) {
+                existingFollowup.remove();
+            }
+
+            // 새 동적 질문 컨테이너 생성
+            const followupContainer = document.createElement('div');
+            followupContainer.className = 'dynamic-followup';
+
+            // 'F_DEGREE' 템플릿에 의해 생성된 options 사용
+            const optionsHTML = followupData.options.map((opt, index) => {
+                const optionId = `${qId}-followup-${gender}-${index}`;
+                return `
+                    <div>
+                        <input type="radio" name="${qId}-followup-${gender}" value="${opt.value}" id="${optionId}">
+                        <label for="${optionId}" class="option-label bg-white">
+                            ${opt.text}
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            followupContainer.innerHTML = `
+                <p class="font-semibold mb-3 text-gray-800">${followupData.text}</p>
+                <div class="space-y-2">${optionsHTML}</div>
+            `;
+            
+            questionCard.appendChild(followupContainer);
+        }
+
+
+        /** 질문 유형에 따라 HTML 생성 (뱃지 추가 및 onchange 제거) */
+        function createQuestionHTML(q, gender) {
+            let html = '';
+            let typeBadge = '';
+
+            // 질문 유형 뱃지 생성
+            switch (q.type) {
+                case 'similarity':
+                    typeBadge = `<span class="question-type-badge bg-blue-100 text-blue-800 border-blue-300">유사성</span>`;
+                    break;
+                case 'crossover':
+                    typeBadge = `<span class="question-type-badge bg-pink-100 text-pink-800 border-pink-300">선호성 (교차)</span>`;
+                    break;
+                case 'dynamic':
+                    typeBadge = `<span class="question-type-badge bg-yellow-100 text-yellow-800 border-yellow-300">선호성 (동적)</span>`;
+                    break;
+            }
+            
+            // 공통 옵션 생성기 (메인 질문용) - onchange 제거, data- attributes 추가
+            const mainOptionsHTML = q.options.map((opt, index) => {
+                let dynamicAttrs = ''; // A string to hold dynamic attributes
+                if (q.type === 'dynamic') {
+                    // Store the followup data in a dataset attribute.
+                    // Use single quotes for the HTML attribute value.
+                    // Stringify the data. `null` if no followup.
+                    const followupDataStr = JSON.stringify(opt.followup || null);
+                    dynamicAttrs = `data-dynamic-radio="true" data-followup='${followupDataStr}'`;
+                }
+                const optionId = `${q.id}-me-${gender}-${index}`;
+                return `
+                    <div>
+                        <input type="radio" name="${q.id}-me-${gender}" value="${opt.value}" data-tag="${opt.tag}" id="${optionId}" ${dynamicAttrs}>
+                        <label for="${optionId}" class="option-label">
+                            ${opt.text}
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            // 이 switch 문이 mainOptionsHTML을 사용합니다.
+            switch (q.type) {
+                case 'similarity':
+                    html = `<div class="question-card rounded-lg shadow-sm">
+                                ${typeBadge}
+                                <p class="font-semibold mb-3 text-gray-800">${q.text}</p>
+                                <div class="space-y-2">${mainOptionsHTML}</div>
+                            </div>`;
+                    break;
+                case 'crossover':
+                    // '선호성 (교차)' 질문은 현재 데이터에 없으므로, 이 로직은 유지됩니다.
+                    // 만약 추가된다면 이 코드가 사용됩니다.
+                    const partnerOptionsHTML = q.options.map((opt, index) => {
+                        const optionId = `${q.id}-partner-${gender}-${index}`;
+                        return `
+                            <div>
+                                <input type="radio" name="${q.id}-partner-${gender}" value="${opt.value}" id="${optionId}">
+                                <label for="${optionId}" class="option-label">
+                                    ${opt.text}
+                                </label>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    html = `<div class="question-card rounded-lg shadow-sm space-y-4">
+                                ${typeBadge}
+                                <div>
+                                    <p class="font-semibold mb-3 text-gray-800">${q.text_me}</p>
+                                    <div class="space-y-2">${mainOptionsHTML}</div>
+                                </div>
+                                <hr class="my-4 border-dashed border-gray-300">
+                                <div>
+                                    <p class="font-semibold mb-3 text-gray-800">${q.text_partner}</p>
+                                    <div class="space-y-2">${partnerOptionsHTML}</div>
+                                </div>
+                            </div>`;
+                    break;
+                case 'dynamic':
+                    html = `<div class="question-card rounded-lg shadow-sm">
+                                ${typeBadge}
+                                <p class="font-semibold mb-3 text-gray-800">${q.text}</p>
+                                <div class="space-y-2">${mainOptionsHTML}</div>
+                                <!-- 동적 질문은 여기에 삽입됨 -->
+                            </div>`;
+                    break;
+            }
+            return html;
+        }
+
+        /** 전체 질문 렌더링 */
+        function renderQuestions() {
+            let maleHTML = '', femaleHTML = '', lastMaleBrainType = '', lastFemaleBrainType = '';
+            totalExpectedAnswers = 0; // 총 답변 수 초기화
+
+            questions.forEach(q => {
+                if (q.brainType !== lastMaleBrainType) {
+                    maleHTML += `<h3 class="brain-type-header male-header">${q.brainType}</h3>`;
+                    lastMaleBrainType = q.brainType;
+                }
+                maleHTML += createQuestionHTML(q, 'male');
+                
+                if (q.brainType !== lastFemaleBrainType) {
+                    femaleHTML += `<h3 class="brain-type-header female-header">${q.brainType}</h3>`;
+                    lastFemaleBrainType = q.brainType;
+                }
+                femaleHTML += createQuestionHTML(q, 'female');
+
+                // 답변해야 할 총 라디오 그룹 수 계산
+                // 각 성별(남/여)이 답변해야 하는 그룹 수
+                if (q.type === 'similarity') totalExpectedAnswers += 1;
+                else if (q.type === 'crossover') totalExpectedAnswers += 2;
+                else if (q.type === 'dynamic') totalExpectedAnswers += 2; // 메인 + 동적
+            });
+            maleQuestionsContainer.innerHTML = maleHTML;
+            femaleQuestionsContainer.innerHTML = femaleHTML;
+        }
+
+        function renderGroupDescriptions() {
+            let html = '';
+            for (const key in sensoryProfiles) {
+                const profile = sensoryProfiles[key];
+                const tags = tagGroups[key].tags.join(', ');
+                html += `<div class="p-2 bg-white rounded-md shadow-sm">
+                            <p><strong>${profile.name}:</strong> ${profile.description}</p>
+                            <p class="mt-1 text-gray-500 text-xs">포함된 태그: ${tags}</p>
+                         </div>`;
+            }
+            groupDescriptionsEl.innerHTML = html;
+        }
+
+        // --- 5. 차트 생성 함수 ---
+        function generateProfile(groupKey) {
+            const profileWords = sensoryWords[groupKey];
+            const texture = getRandomItem(profileWords.texture);
+            const color = getRandomItem(profileWords.color);
+            const scent = getRandomItem(profileWords.scent);
+            const shape = getRandomItem(profileWords.shape);
+            return `${texture} ${color} ${scent}의 ${shape}`;
+        }
+
+        function createRadarChart(canvasId, label, data, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+             if (window[canvasId + 'ChartInstance']) { window[canvasId + 'ChartInstance'].destroy(); }
+            const chartData = {
+                labels: Object.values(sensoryProfiles).map(p => p.name.split(' ')[0]), // ['감성', '이성', ...]
+                datasets: [{
+                    label: label,
+                    data: Object.keys(sensoryProfiles).map(key => data[key] || 0),
+                    backgroundColor: `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.2)`,
+                    borderColor: color,
+                    pointBackgroundColor: color,
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: color
+                }]
+            };
+            const options = {
+                scales: { 
+                    r: { 
+                        angleLines: { display: true }, 
+                        suggestedMin: 0, 
+                        suggestedMax: Math.max(...Object.values(data), 5), // 최대값에 여유를 둠
+                        pointLabels: { font: { size: 14 } }, // Chart.js v3.x.x syntax
+                        ticks: {
+                            stepSize: 1 // 방사형 차트 눈금을 1단위로
+                        }
+                    } 
+                },
+                plugins: { legend: { position: 'bottom', } },
+                responsive: true,
+                maintainAspectRatio: true
+            };
+             window[canvasId + 'ChartInstance'] = new Chart(ctx, { type: 'radar', data: chartData, options: options });
+             return window[canvasId + 'ChartInstance'];
+        }
+
+        function createComparisonRadarChart(canvasId, maleData, femaleData) {
+             const ctx = document.getElementById(canvasId).getContext('2d');
+             if (window[canvasId + 'ChartInstance']) { window[canvasId + 'ChartInstance'].destroy(); }
+             const chartData = {
+                labels: Object.values(sensoryProfiles).map(p => p.name.split(' ')[0]),
+                datasets: [
+                    {
+                        label: '남자',
+                        data: Object.keys(sensoryProfiles).map(key => maleData[key] || 0),
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3B82F6', pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#3B82F6'
+                    },
+                     {
+                        label: '여자',
+                        data: Object.keys(sensoryProfiles).map(key => femaleData[key] || 0),
+                        backgroundColor: 'rgba(236, 72, 153, 0.2)', borderColor: '#EC4899', pointBackgroundColor: '#EC4899',
+                        pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#EC4899'
+                    }
+                ]
+            };
+            const options = {
+                 scales: { 
+                     r: { 
+                         angleLines: { display: true }, 
+                         suggestedMin: 0, 
+                         suggestedMax: Math.max(...Object.values(maleData), ...Object.values(femaleData), 5), // 최대값에 여유
+                         pointLabels: { font: { size: 14 } }, // Chart.js v3.x.x syntax
+                         ticks: {
+                            stepSize: 1 // 방사형 차트 눈금을 1단위로
+                        }
+                     } 
+                 },
+                 plugins: { legend: { position: 'bottom', } },
+                 responsive: true,
+                 maintainAspectRatio: true
+            };
+            window[canvasId + 'ChartInstance'] = new Chart(ctx, { type: 'radar', data: chartData, options: options });
+            return window[canvasId + 'ChartInstance'];
+        }
+        
+        // --- 6. 결과 계산 로직 (수정됨) ---
+        function calculateResults() {
+            // 답변 완료 여부 확인
+            const maleAnsweredCount = document.querySelectorAll('#male-questions input[type="radio"]:checked').length;
+            const femaleAnsweredCount = document.querySelectorAll('#female-questions input[type="radio"]:checked').length;
+            
+            // 각 성별이 답변해야 하는 총 라디오 그룹 수와 일치하는지 확인
+            if (maleAnsweredCount < totalExpectedAnswers || femaleAnsweredCount < totalExpectedAnswers) {
+                warningMessage.classList.remove('hidden');
+                return;
+            }
+            warningMessage.classList.add('hidden');
+
+            let similarityScore = 0;
+            let maxSimilarityScore = 0;
+            let preferenceScore = 0;
+            let maxPreferenceScore = 0;
+
+            const maleTags = {}, femaleTags = {}, maleGroupCounts = {}, femaleGroupCounts = {};
+            
+            questions.forEach((q) => {
+                // '나의' 답변에 대한 정보 (성향 분석용)
+                const maleMeNode = document.querySelector(`input[name="${q.id}-me-male"]:checked`);
+                const femaleMeNode = document.querySelector(`input[name="${q.id}-me-female"]:checked`);
+                
+                if (!maleMeNode || !femaleMeNode) {
+                    console.error(`Question ${q.id} is missing 'me' answers.`);
+                    return; // 'me' 답변이 없으면 이 질문은 건너뜀
+                }
+
+                const maleMeTag = maleMeNode.dataset.tag;
+                const femaleMeTag = femaleMeNode.dataset.tag;
+
+                // '나의' 답변 태그 카운트 (성향 분석용)
+                if (maleMeTag) {
+                    maleTags[maleMeTag] = (maleTags[maleMeTag] || 0) + 1;
+                    const maleGroupKey = findTagGroupKey(maleMeTag);
+                    if(maleGroupKey) maleGroupCounts[maleGroupKey] = (maleGroupCounts[maleGroupKey] || 0) + 1;
+                }
+                if (femaleMeTag) {
+                    femaleTags[femaleMeTag] = (femaleTags[femaleMeTag] || 0) + 1;
+                    const femaleGroupKey = findTagGroupKey(femaleMeTag);
+                    if(femaleGroupKey) femaleGroupCounts[femaleGroupKey] = (femaleGroupCounts[femaleGroupKey] || 0) + 1;
+                }
+
+                // 질문 유형별 점수 계산
+                switch (q.type) {
+                    case 'similarity':
+                        maxSimilarityScore += 2; // 최대 2점
+                        if (maleMeNode.value === femaleMeNode.value) {
+                            similarityScore += 2;
+                        }
+                        break;
+                    case 'crossover':
+                        // 현재 이 유형의 질문이 없지만, 로직은 남겨둠
+                        maxPreferenceScore += 4; // 남->여, 여->남 총 2번의 기회 (각 2점)
+                        const malePartnerNode = document.querySelector(`input[name="${q.id}-partner-male"]:checked`);
+                        const femalePartnerNode = document.querySelector(`input[name="${q.id}-partner-female"]:checked`);
+                        
+                        if (!malePartnerNode || !femalePartnerNode) {
+                             console.error(`Question ${q.id} is missing 'partner' answers.`);
+                             break;
+                        }
+
+                        // 남자가 원하는 파트너 모습 <-> 여자의 실제 모습
+                        if (malePartnerNode.value === femaleMeNode.value) {
+                            preferenceScore += 2;
+                        }
+                        // 여자가 원하는 파트너 모습 <-> 남자의 실제 모습
+                        if (femalePartnerNode.value === maleMeNode.value) {
+                            preferenceScore += 2;
+                        }
+                        break;
+                    case 'dynamic':
+                        // (수정됨) '선호성'이 아닌 '유사성' 점수에 기여 (등급별)
+                        maxSimilarityScore += 4; // 최대 4점 (기본 성향 2점 + 심도 2점)
+
+                        const maleFollowupNode = document.querySelector(`input[name="${q.id}-followup-male"]:checked`);
+                        const femaleFollowupNode = document.querySelector(`input[name="${q.id}-followup-female"]:checked`);
+                        
+                        if (!maleFollowupNode || !femaleFollowupNode) {
+                             console.error(`Question ${q.id} is missing 'followup' answers.`);
+                             break;
+                        }
+
+                        // 1. 기본 성향(Trait)이 일치하는지 확인 (예: 둘 다 '보수적' 선택)
+                        if (maleMeNode.value === femaleMeNode.value) {
+                            // 기본 성향 일치: 2점
+                            similarityScore += 2;
+
+                            // 2. 심도(Depth)가 얼마나 유사한지 확인 (followup)
+                            const maleDepth = parseInt(maleFollowupNode.value, 10);
+                            const femaleDepth = parseInt(femaleFollowupNode.value, 10);
+                            const depthDiff = Math.abs(maleDepth - femaleDepth);
+
+                            if (depthDiff === 0) {
+                                // 심도 완벽 일치: 추가 2점 (총 4점)
+                                similarityScore += 2;
+                            } else if (depthDiff === 1) {
+                                // 심도 1단계 차이: 추가 1점 (총 3점)
+                                similarityScore += 1;
+                            }
+                            // else: 심도 2단계 이상 차이 (총 2점)
+                        }
+                        // else: 기본 성향 불일치 (총 0점)
+                        
+                        break;
+                }
+            });
+
+            // --- 7. 결과 표시 로직 (수정됨) ---
+            
+            // 점수 계산
+            const finalSimilarity = maxSimilarityScore > 0 ? Math.round((similarityScore / maxSimilarityScore) * 100) : 0;
+            const finalPreference = maxPreferenceScore > 0 ? Math.round((preferenceScore / maxPreferenceScore) * 100) : 0;
+            // 총점은 (획득점수 / 최대점수) * 100
+            const maxTotalScore = maxSimilarityScore + maxPreferenceScore;
+            const totalScore = similarityScore + preferenceScore;
+            const finalTotal = maxTotalScore > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0;
+
+            // 점수 DOM 업데이트
+            matchingScoreEl.textContent = `${finalTotal}%`;
+            similarityScoreEl.textContent = `${finalSimilarity}%`;
+            preferenceScoreEl.textContent = `${finalPreference}%`;
+            // 애니메이션을 위해 잠시 0으로 설정
+            scoreBarEl.style.width = `0%`;
+            setTimeout(() => { scoreBarEl.style.width = `${finalTotal}%`; }, 100);
+
+            // 차트 영역 다시 그리기
+            scoreBreakdownEl.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <div class="text-center p-2">
+                        <h4 class="font-bold text-lg mb-2 text-blue-700">🤵‍♂️ 남자 '결' 분포</h4>
+                        <canvas id="maleRadarChart"></canvas>
+                    </div>
+                    <div class="text-center p-2">
+                        <h4 class="font-bold text-lg mb-2 text-indigo-700">💖 두 분의 '결' 비교</h4>
+                        <canvas id="comparisonRadarChart"></canvas>
+                    </div>
+                    <div class="text-center p-2">
+                         <h4 class="font-bold text-lg mb-2 text-pink-700">👰‍♀️ 여자 '결' 분포</h4>
+                        <canvas id="femaleRadarChart"></canvas>
+                    </div>
+                </div>
+                 <div class="mt-8 pt-4 border-t">
+                    <h4 class="font-bold text-lg mb-2 text-center text-indigo-700">📊 두 분의 성향 분포가 가장 비슷한 '결' TOP 3</h4>
+                    <p class="text-xs text-center text-gray-500 mb-2">'결'별 수치 차이가 가장 적은 순서입니다.</p>
+                    <div id="similarity-top3" class="space-y-3 max-w-md mx-auto"></div>
+                 </div>
+            `;
+            
+            // 새 차트 생성
+            maleRadarChart = createRadarChart('maleRadarChart', '남자', maleGroupCounts, '#3B82F6');
+            femaleRadarChart = createRadarChart('femaleRadarChart', '여자', femaleGroupCounts, '#EC4899');
+            comparisonRadarChart = createComparisonRadarChart('comparisonRadarChart', maleGroupCounts, femaleGroupCounts);
+
+            // '결'별 유사도 순위
+            const groupSimilarityScores = [];
+            for (const key in sensoryProfiles) {
+                const maleScore = maleGroupCounts[key] || 0;
+                const femaleScore = femaleGroupCounts[key] || 0;
+                const maxScore = Math.max(maleScore, femaleScore);
+                const minScore = Math.min(maleScore, femaleScore);
+                // 두 사람 다 0점이면 100% 유사, 한쪽만 0점이면 0% 유사
+                const similarity = (maxScore === 0 && minScore === 0) ? 100 : (maxScore > 0 ? Math.round((minScore / maxScore) * 100) : 0);
+                groupSimilarityScores.push({ key: key, category: sensoryProfiles[key].name, maleScore: maleScore, femaleScore: femaleScore, difference: Math.abs(maleScore - femaleScore), similarity: similarity });
+            }
+            // 1. 차이가 적은 순, 2. 유사도 높은 순
+            groupSimilarityScores.sort((a, b) => {
+                if (a.difference !== b.difference) { return a.difference - b.difference; }
+                return b.similarity - a.similarity;
+            });
+            let top3HTML = '';
+            groupSimilarityScores.slice(0, 3).forEach((item, index) => {
+                // 두 점수 합이 0일 때 50:50으로 표시
+                const total = item.maleScore + item.femaleScore;
+                const maleBarWidth = total > 0 ? (item.maleScore / total) * 100 : 50;
+                 top3HTML += `<div class="p-3 bg-white rounded-md shadow-sm border border-gray-200">
+                                        <div class="flex justify-between items-center text-sm font-semibold mb-2">
+                                            <span><span class="font-bold text-indigo-600 mr-2">${index + 1}위</span>${item.category}</span>
+                                            <span class="font-bold text-indigo-500">${item.similarity}% 유사</span>
+                                        </div>
+                                        <div class="w-full bg-pink-200 flex rounded-full h-5 overflow-hidden relative">
+                                            <!-- 라벨이 항상 보이도록 Z-index 와 포인터 이벤트 제거 사용 -->
+                                            <div class="absolute top-0 left-0 w-full h-full flex justify-between items-center px-2 text-xs font-bold text-white z-10 pointer-events-none">
+                                                <span>🤵‍♂️ ${item.maleScore}</span>
+                                                <span>${item.femaleScore} 👰‍♀️</span>
+                                            </div>
+                                            <div class="bg-blue-400 h-5" style="width: ${maleBarWidth}%"></div>
+                                        </div>
+                                     </div>`;
+            });
+            document.getElementById('similarity-top3').innerHTML = top3HTML;
+
+            // 주 '결' 프로필 생성
+            const dominantMaleGroupKey = Object.keys(maleGroupCounts).length > 0 ? Object.keys(maleGroupCounts).reduce((a, b) => maleGroupCounts[a] > maleGroupCounts[b] ? a : b) : 'ADAPTIVE_BALANCED';
+            const dominantFemaleGroupKey = Object.keys(femaleGroupCounts).length > 0 ? Object.keys(femaleGroupCounts).reduce((a, b) => femaleGroupCounts[a] > femaleGroupCounts[b] ? a : b) : 'ADAPTIVE_BALANCED';
+            const maleProfileData = sensoryProfiles[dominantMaleGroupKey];
+            const femaleProfileData = sensoryProfiles[dominantFemaleGroupKey];
+            
+            // 종합 '결' 그라데이션
+            combinedGradientEl.style.background = `linear-gradient(to right, ${maleProfileData.colorCode}, ${femaleProfileData.colorCode})`;
+            
+            // 남자 '결' 결과
+            resultVisualMaleEl.className = `mt-4 p-6 rounded-lg transition-all duration-500 ${maleProfileData.background}`;
+            resultProfileTextMaleEl.textContent = generateProfile(dominantMaleGroupKey);
+            resultGroupNameMaleEl.textContent = `남자는 '${maleProfileData.name}'`;
+            resultGroupDescriptionMaleEl.textContent = maleProfileData.description;
+            maleTagsEl.innerHTML = Object.entries(maleTags).sort((a, b) => b[1] - a[1]).map(([tag, count]) => `<span class="result-tag font-medium py-1 px-3 rounded-full text-sm">${tag}${count > 1 ? ` x${count}` : ''}</span>`).join('') || '<span class="text-gray-500">선택된 태그가 없습니다.</span>';
+            
+            // 여자 '결' 결과
+            resultVisualFemaleEl.className = `mt-4 p-6 rounded-lg transition-all duration-500 ${femaleProfileData.background}`;
+            resultProfileTextFemaleEl.textContent = generateProfile(dominantFemaleGroupKey);
+            resultGroupNameFemaleEl.textContent = `여자는 '${femaleProfileData.name}'`;
+            resultGroupDescriptionFemaleEl.textContent = femaleProfileData.description;
+            femaleTagsEl.innerHTML = Object.entries(femaleTags).sort((a, b) => b[1] - a[1]).map(([tag, count]) => `<span class="result-tag font-medium py-1 px-3 rounded-full text-sm">${tag}${count > 1 ? ` x${count}` : ''}</span>`).join('') || '<span class="text-gray-500">선택된 태그가 없습니다.</span>';
+
+            // 관계 조언 수정
+            if (finalTotal > 75) {
+                relationshipAdviceEl.textContent = `매칭률이 매우 높습니다! 두 분은 서로의 '결'을 깊이 이해하고 있으며, 성향의 깊이까지 유사합니다. 천생연분입니다!`;
+            } else if (finalTotal > 50) {
+                 relationshipAdviceEl.textContent = `좋은 매칭률입니다! '유사성 점수'가 높다는 것은 두 분이 비슷한 성향을 가졌다는 의미입니다. 만약 '선호성 점수'가 높다면(현재는 0점), 서로 다른 점을 잘 보완해주는 커플일 수 있습니다.`;
+            } else {
+                 relationshipAdviceEl.textContent = `두 분은 서로 다른 '결'을 가졌습니다. '유사성 점수'의 상세 내역을 확인해 보세요. 기본 성향은 같지만 심도가 달라서 점수를 얻지 못했을 수도 있습니다. 이 다름이 서로를 보완하는 기회가 될 수 있습니다.`;
+            }
+            if (dominantMaleGroupKey === dominantFemaleGroupKey) {
+                 relationshipAdviceEl.textContent += ` (두 분은 '${maleProfileData.name}'(으)로 핵심 '결'이 동일하여 서로를 깊이 이해하는 관계입니다.)`;
+            } else {
+                 relationshipAdviceEl.textContent += ` (두 분은 각각 '${maleProfileData.name}', '${femaleProfileData.name}'(으)로 서로 다른 '결'을 가졌지만, 이 다름이 서로의 세계를 넓혀줄 수 있습니다.)`;
+            }
+
+            // 결과 화면 표시
+            questionSection.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            // 페이드인 애니메이션 초기화
+            document.querySelectorAll('#results .fade-in').forEach(el => el.style.opacity = 0);
+            setTimeout(() => {
+                 document.querySelectorAll('#results .fade-in').forEach(el => el.classList.add('is-visible'));
+            }, 10);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- 8. 이벤트 리스너 ---
+        retryBtn.addEventListener('click', () => {
+            // 차트 인스턴스 파괴
+            if (maleRadarChart) maleRadarChart.destroy();
+            if (femaleRadarChart) femaleRadarChart.destroy();
+            if (comparisonRadarChart) comparisonRadarChart.destroy();
+            
+            resultsContainer.classList.add('hidden');
+            questionSection.classList.remove('hidden');
+            
+            // 질문을 다시 렌더링하여 모든 상태(동적 질문 포함)를 초기화
+            renderQuestions(); 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        /** 랜덤 답변 버튼 리스너 */
+        randomBtn.addEventListener('click', () => {
+            ['male', 'female'].forEach(gender => {
+                questions.forEach(q => {
+                    // 1. '나의' 질문에 랜덤 답변
+                    const meRadios = document.querySelectorAll(`input[name="${q.id}-me-${gender}"]`);
+                    if (meRadios.length > 0) {
+                        const randomMeRadio = meRadios[Math.floor(Math.random() * meRadios.length)];
+                        randomMeRadio.checked = true;
+                        // 동적 질문 트리거를 위해 'change' 이벤트 강제 발생
+                        randomMeRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+
+                    // 2. '파트너' 질문(Crossover)에 랜덤 답변
+                    if (q.type === 'crossover') {
+                        const partnerRadios = document.querySelectorAll(`input[name="${q.id}-partner-${gender}"]`);
+                         if (partnerRadios.length > 0) {
+                            partnerRadios[Math.floor(Math.random() * partnerRadios.length)].checked = true;
+                        }
+                    }
+                });
+            });
+
+            // 3. '동적' 질문에 랜덤 답변 (이벤트 발생 후 잠시 기다렸다가 실행)
+            setTimeout(() => {
+                ['male', 'female'].forEach(gender => {
+                    questions.forEach(q => {
+                        if (q.type === 'dynamic') {
+                            // 생성된 동적 질문의 라디오 버튼을 찾음
+                            const followupRadios = document.querySelectorAll(`input[name="${q.id}-followup-${gender}"]`);
+                            if (followupRadios.length > 0) {
+                                followupRadios[Math.floor(Math.random() * followupRadios.length)].checked = true;
+                            }
+                        }
+                    });
+                });
+                // 시각적 피드백을 위해 스타일 강제 업데이트 (선택사항)
+                updateLabelStylesForRandom();
+            }, 100); // 동적 질문이 렌더링될 시간 확보
+        });
+
+        // '랜덤' 버튼 클릭 시 모든 라벨 스타일을 업데이트하는 함수
+        function updateLabelStylesForRandom() {
+             document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                if (label) {
+                    if (radio.checked) {
+                        label.style.borderColor = '#6366f1'; // indigo-500
+                        label.style.backgroundColor = '#eef2ff'; // indigo-50
+                        label.style.fontWeight = '500';
+                    } else {
+                        label.style.borderColor = '#e5e7eb'; // gray-200
+                        label.style.backgroundColor = (label.closest('.dynamic-followup') ? '#ffffff' : 'transparent'); // 동적 질문 라벨은 흰색 배경 유지
+                        label.style.fontWeight = 'normal';
+                    }
+                }
+            });
+        }
+        
+        // 라디오 버튼 스타일 업데이트 함수 (개별 변경용)
+        function updateLabelStyles(changedRadio) {
+            // 같은 name을 가진 모든 라디오의 라벨 스타일 초기화
+            const name = changedRadio.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                if (label) {
+                    label.style.borderColor = '#e5e7eb';
+                    label.style.backgroundColor = (label.closest('.dynamic-followup') ? '#ffffff' : 'transparent'); // 동적 질문 라벨은 흰색 배경
+                    label.style.fontWeight = 'normal';
+                }
+            });
+            // 체크된 라디오의 라벨 스타일 변경
+            const checkedLabel = document.querySelector(`label[for="${changedRadio.id}"]`);
+            if (checkedLabel) {
+                checkedLabel.style.borderColor = '#6366f1';
+                checkedLabel.style.backgroundColor = '#eef2ff';
+                checkedLabel.style.fontWeight = '500';
+            }
+        }
+        
+        // (수정됨) 전역 이벤트 리스너: 스타일링과 동적 질문을 모두 처리
+        // 'question-section'에 이벤트 리스너를 위임하여 효율성 향상
+        document.getElementById('question-section').addEventListener('change', (event) => {
+            // 라디오 버튼에서 이벤트가 발생했는지 확인
+            if (event.target.type === 'radio') {
+                // 1. 스타일 업데이트
+                updateLabelStyles(event.target);
+                
+                // 2. 동적 질문 트리거 확인 (data-dynamic-radio 속성이 'true'인지)
+                if (event.target.dataset.dynamicRadio === 'true') {
+                    handleDynamic(event.target);
+                }
+            }
+        });
+
+
+        calculateBtn.addEventListener('click', calculateResults);
+
+        // --- 9. 초기 실행 ---
+        renderQuestions();
+        renderGroupDescriptions();
+    </script>
+</body>
+</html>
